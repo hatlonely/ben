@@ -8,5 +8,5 @@ class DictSeed(Seed):
     def __init__(self, args):
         self.seeds = args
 
-    def seed(self):
+    def pick(self):
         return random.choice(self.seeds)

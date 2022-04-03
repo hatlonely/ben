@@ -20,5 +20,5 @@ class TestDictSeed(unittest.TestCase):
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=10)
 
         for _ in range(100):
-            pool.submit(print, s.seed())
+            pool.submit(print, s.pick())
 

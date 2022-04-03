@@ -16,5 +16,5 @@ class FileSeed(Seed):
             for line in fp:
                 self.seeds.append(json.loads(line))
 
-    def seed(self):
+    def pick(self):
         return random.choice(self.seeds)

@@ -2,5 +2,5 @@
 
 
 class Seed:
-    def seed(self) -> any:
+    def pick(self) -> any:
         pass
