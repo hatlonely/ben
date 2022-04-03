@@ -6,13 +6,17 @@ ctx:
 
 seed:
   seed1:
-    file:
+    type: file
+    args:
       name: seed.json
-    kvs:
-      - key1: val11
-        key2: val21
-      - key1: val12
-        key2: val22
+  seed2:
+    type: dict
+    args:
+      kvs:
+        - key1: val11
+          key2: val21
+        - key1: val12
+          key2: val22
 
 plan:
   - name: ben1
@@ -20,6 +24,9 @@ plan:
       req: seed1
     parallel: 10
     qps: 100
+    terminal:
+      duration: 1
+      count: 1000
     step:
       - ctx: shell
         req:
