@@ -1,0 +1,32 @@
+name: ben-example
+
+ctx:
+  sh:
+    type: shell
+
+seed:
+  seed1:
+    file:
+      name: seed.json
+    kvs:
+      - key1: val11
+        key2: val21
+      - key1: val12
+        key2: val22
+
+plan:
+  - name: ben1
+    seed:
+      req: seed1
+    parallel: 10
+    qps: 100
+    step:
+      - ctx: shell
+        req:
+          command: echo -n ${KEY1} ${KEY2}
+          envs:
+            "#KEY1": seed.req.key1
+            "#KEY2": seed.req.key2
+        res:
+          groupby: res["exitCode"]
+          success: 0
