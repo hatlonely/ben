@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import copy
 import json
+import uuid
 import os
 import yaml
 import pathlib
@@ -11,14 +12,17 @@ from dataclasses import dataclass
 
 from ..seed import seed_map
 from ..util import merge, REQUIRED, render
-from ..driver import Driver
+from ..driver import Driver, driver_map
 from ..reporter import Reporter, reporter_map
+from ..result import TestResult
 
 
 @dataclass
 class RuntimeConstant:
-    x: any
+    test_id: str
     driver_map: dict
+    x: any
+    plan_directory: str
 
 
 @dataclass
@@ -38,18 +42,25 @@ class Framework:
         x=None,
         json_result=None,
     ):
-        self.constant = RuntimeConstant(
-            x=x,
-        )
 
         self.seed_map = seed_map
         self.reporter_map = reporter_map
+        self.driver_map = driver_map
         if x:
             self.x = Framework.load_x(x)
             if hasattr(self.x, "reporter_map"):
                 self.reporter_map = self.reporter_map | self.x.reporter_map
             if hasattr(self.x, "seed_map"):
                 self.seed_map = self.seed_map | self.x.seed_map
+            if hasattr(self.x, "driver_map"):
+                self.driver_map = self.driver_map | self.x.driver_map
+
+        self.constant = RuntimeConstant(
+            test_id=uuid.uuid4().hex,
+            driver_map=self.driver_map,
+            x=self.x,
+            plan_directory=plan_directory,
+        )
 
         if not customize and os.path.exists(os.path.join(pathlib.Path.home(), ".ben/customize.yaml")):
             customize = os.path.join(pathlib.Path.home(), ".ben/customize.yaml")
@@ -116,7 +127,30 @@ class Framework:
             val = render(val, var=var, x=constant.x, peval=customize.keyPrefix.eval, pexec=customize.keyPrefix.exec, pshell=customize.keyPrefix.shell)
             ctx[key] = constant.driver_map[val["type"]](val["args"])
 
-    def run_plan(self):
+        test_result = TestResult(
+            constant.test_id,
+            directory,
+            info["name"],
+            description=description,
+        )
+
+        rctx = RuntimeContext(
+            ctx=ctx,
+            var=var,
+            var_info=var_info,
+        )
+
+        if directory.startswith(constant.plan_directory):
+            pass
+
+    @staticmethod
+    def run_plan(
+        directory,
+        customize,
+        constant: RuntimeConstant,
+        rctx: RuntimeConstant,
+        plan_info
+    ):
         pass
 
     @staticmethod
