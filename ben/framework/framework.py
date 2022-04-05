@@ -154,6 +154,18 @@ class Framework:
         pass
 
     @staticmethod
+    def run_unit():
+        pass
+
+    @staticmethod
+    def run_step():
+        pass
+
+    @staticmethod
+    def run_sub_step():
+        pass
+
+    @staticmethod
     def load_ctx(name, filename):
         dft = {
             "name": name,

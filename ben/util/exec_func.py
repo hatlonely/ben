@@ -5,20 +5,21 @@ from .include import *
 import subprocess
 
 
-def exec_with_res(rule, val=None, case=None, step=None, var=None, x=None):
+def py_eval(rule, **kwargs):
+    locals().update(**kwargs)
+    return eval(rule)
+
+
+def py_exec(rule, **kwargs):
     loc = {}
-    env = globals()
-    env.update(val=val)
-    env.update(case=case)
-    env.update(step=step)
-    env.update(var=var)
-    env.update(x=x)
+    env = locals()
+    env.update(**kwargs)
     env.update(to_time=to_time)
     exec(rule, env, loc)
     return loc["res"]
 
 
-def exec_shell(rule):
+def sh_exec(rule):
     process = subprocess.run(
         ["/bin/bash", "-c", rule],
         stdout=subprocess.PIPE,

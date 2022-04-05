@@ -2,25 +2,25 @@
 
 
 from .include import *
-from .exec_func import exec_with_res, exec_shell
+from .exec_func import py_exec, py_eval, sh_exec
 
 
-def render(req, case=None, var=None, x=None, peval="#", pexec="%", pshell="$"):
+def render(req, peval="#", pexec="%", pshell="$", **kwargs):
     if isinstance(req, dict):
         res = {}
         for key, val in req.items():
             if key.startswith(peval):
-                res[key[len(peval):]] = eval(val)
+                res[key[len(peval):]] = py_eval(val, **kwargs)
             elif key.startswith(pexec):
-                res[key[len(pexec):]] = exec_with_res(val, case=case, var=var, x=x)
+                res[key[len(pexec):]] = py_exec(val, **kwargs)
             elif key.startswith(pshell):
-                res[key[len(pshell):]] = exec_shell(val)
+                res[key[len(pshell):]] = sh_exec(val)
             else:
-                res[key] = render(req[key], case=case, var=var, x=x)
+                res[key] = render(req[key], **kwargs)
         return res
     if isinstance(req, list):
         res = []
         for val in req:
-            res.append(render(val, case=case, var=var, x=x))
+            res.append(render(val, **kwargs))
         return res
     return req
