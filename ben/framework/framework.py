@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+
+import concurrent.futures
 import copy
 import json
 import uuid
@@ -6,6 +9,7 @@ import os
 import yaml
 import pathlib
 import sys
+import queue
 import importlib
 from types import SimpleNamespace
 from dataclasses import dataclass
@@ -152,11 +156,56 @@ class Framework:
         rctx: RuntimeConstant,
         plan_info
     ):
-        pass
+        plan_info = merge(plan_info, {
+            "name": directory,
+            "terminal": {
+                "duration": 1
+            },
+            "unit": []
+        })
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
+        res = pool.map(Framework.run_unit)
 
     @staticmethod
-    def run_unit():
-        pass
+    def run_unit(
+        customize,
+        constant: RuntimeConstant,
+        rctx: RuntimeContext,
+        plan,
+        unit_info,
+    ):
+        unit_info = merge(unit_info, {
+            "parallel": 1,
+            "qps": 0,
+            "step": REQUIRED,
+        })
+        q = queue.Queue(maxsize=unit_info["parallel"])
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=unit_info["parallel"])
+        pool.submit(Framework.run_steps, customize, constant, rctx, plan, unit_info, queue)
+        success = 0
+        while True:
+            # terminal
+            item = q.get()
+            success += 1
+        return success
+
+    @staticmethod
+    def run_steps(
+        customize,
+        constant: RuntimeConstant,
+        rctx: RuntimeContext,
+        plan, seed, step_infos, q: queue.Queue
+    ):
+        ress = []
+        for step_info in step_infos:
+            res = Framework.run_step(
+                customize,
+                constant,
+                rctx,
+                plan, seed, step_info
+            )
+            ress.append(res)
+        q.put(ress)
 
     @staticmethod
     def run_step(
@@ -172,7 +221,6 @@ class Framework:
         res = rctx.ctx[step_info["ctx"]].do(req)
         print(res)
         return step_result
-
 
     @staticmethod
     def load_ctx(name, filename):
