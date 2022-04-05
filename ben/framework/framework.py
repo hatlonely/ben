@@ -9,12 +9,13 @@ import sys
 import importlib
 from types import SimpleNamespace
 from dataclasses import dataclass
+from datetime import datetime
 
 from ..seed import seed_map
 from ..util import merge, REQUIRED, render
 from ..driver import Driver, driver_map
 from ..reporter import Reporter, reporter_map
-from ..result import TestResult
+from ..result import TestResult, PlanResult, UnitResult, StepResult
 
 
 @dataclass
@@ -158,12 +159,20 @@ class Framework:
         pass
 
     @staticmethod
-    def run_step():
-        pass
+    def run_step(
+        customize,
+        constant: RuntimeConstant,
+        rctx: RuntimeContext,
+        plan, unit, seed,
+        step_info,
+    ):
+        step_result = StepResult()
+        step_start = datetime.now()
+        req = render(step_info["req"], plan=plan, unit=unit, seed=seed, var=rctx.var, x=constant.x)
+        res = rctx.ctx[step_info["ctx"]].do(req)
+        print(res)
+        return step_result
 
-    @staticmethod
-    def run_sub_step():
-        pass
 
     @staticmethod
     def load_ctx(name, filename):
