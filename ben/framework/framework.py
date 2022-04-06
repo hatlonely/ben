@@ -26,9 +26,10 @@ from ..result import TestResult, PlanResult, UnitResult, StepResult
 @dataclass
 class RuntimeConstant:
     test_id: str
+    test_directory: str
+    plan_directory: str
     driver_map: dict
     x: any
-    plan_directory: str
 
 
 @dataclass
@@ -64,9 +65,10 @@ class Framework:
 
         self.constant = RuntimeConstant(
             test_id=uuid.uuid4().hex,
+            test_directory=test_directory,
+            plan_directory=test_directory if not plan_directory else os.path.join(test_directory, plan_directory.strip().rstrip("/")),
             driver_map=self.driver_map,
             x=self.x,
-            plan_directory=plan_directory,
         )
 
         if not customize and os.path.exists(os.path.join(pathlib.Path.home(), ".ben/customize.yaml")):
@@ -111,7 +113,14 @@ class Framework:
         pass
 
     def run(self):
-        pass
+        rctx = RuntimeContext(
+            ctx={},
+            var=None,
+            var_info={},
+        )
+
+        res = Framework.run_test(self.constant.test_directory, self.customize, self.constant, rctx)
+        print(self.reporter.report(res))
 
     @staticmethod
     def run_test(
@@ -148,7 +157,7 @@ class Framework:
         )
 
         if directory.startswith(constant.plan_directory):
-            for plan_info in Framework.plans(customize, constant, directory):
+            for plan_info in Framework.plans(customize, constant, info, directory):
                 result = Framework.run_plan(directory, customize, constant, rctx, plan_info)
                 test_result.add_plan_result(result)
 
@@ -173,6 +182,7 @@ class Framework:
             },
             "unit": []
         })
+        print(plan_info["unit"])
         plan_result = PlanResult(plan_info["planID"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
         results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(rctx), [i for i in plan_info["unit"]])
@@ -241,7 +251,10 @@ class Framework:
         return step_result
 
     @staticmethod
-    def plans(customize, constant: RuntimeConstant, directory):
+    def plans(customize, constant: RuntimeConstant, info, directory):
+        for idx, plan in enumerate(info["plan"]):
+            yield Framework.format_plan(plan, customize.loadingFiles.ctx, idx)
+
         for filename in [
             i
             for i in os.listdir(directory)
@@ -262,6 +275,7 @@ class Framework:
         dft = {
             "name": name,
             "description": "",
+            "var": {},
             "ctx": {},
             "seed": {},
             "plan": [],
@@ -317,3 +331,4 @@ class Framework:
             "description": "",
             "planID": plan_id
         })
+        return info

@@ -61,6 +61,9 @@ class PlanResult:
 
     def __init__(self, id_):
         self.id_ = id_
+        self.is_err = False
+        self.err = ""
+        self.units = []
 
     def add_unit_result(self, unit):
         self.units.append(unit)
@@ -105,6 +108,10 @@ class TestResult:
         self.directory = directory
         self.name = name
         self.description = description
+        self.is_err = False
+        self.err = ""
+        self.plans = []
+        self.sub_tests = []
         if err_message:
             self.is_err = True
             self.err = err_message
