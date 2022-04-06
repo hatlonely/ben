@@ -64,13 +64,10 @@ class TestResult:
     directory: str
     name: str
     description: str
-    success: str
-    qps: str
-    avgResTime: timedelta
-    rate: float
-    code: dict
     is_err: bool
     err: str
+    plans: list[PlanResult]
+    sub_tests: list
 
     def to_json(self):
         return {
@@ -78,13 +75,9 @@ class TestResult:
             "directory": self.directory,
             "name": self.name,
             "description": self.description,
-            "success": self.success,
-            "qps": self.qps,
-            "avgResTime": self.avgResTime,
-            "rate": self.rate,
-            "code": self.code,
             "isErr": self.is_err,
             "err": self.err,
+            "plans": self.plans,
         }
 
     @staticmethod
@@ -96,11 +89,8 @@ class TestResult:
             description=obj["description"],
             err_message=obj["err"],
         )
-        res.success = obj["success"]
-        res.qps = obj["qps"]
-        res.avgResTime = obj["avgResTime"]
-        res.rate = obj["rate"]
-        res.code = obj["code"]
+        res.plans = [PlanResult.from_json(i) for i in obj["plans"]]
+        return res
 
     def __init__(self, id_, directory, name, description="", err_message=None):
         self.id_ = id_
@@ -110,3 +100,9 @@ class TestResult:
         if err_message:
             self.is_err = True
             self.err = err_message
+
+    def add_plan_result(self, plan):
+        self.plans.append(plan)
+
+    def add_sub_test_result(self, sub_test):
+        self.sub_tests.append(sub_test)

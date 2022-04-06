@@ -146,14 +146,18 @@ class Framework:
         )
 
         if directory.startswith(constant.plan_directory):
-            pass
+            for plan_info in Framework.plans(customize, constant, directory):
+                result = Framework.run_plan(directory, customize, constant, rctx, plan_info)
+                test_result.add_plan_result(result)
+
+        return test_result
 
     @staticmethod
     def run_plan(
         directory,
         customize,
         constant: RuntimeConstant,
-        rctx: RuntimeConstant,
+        rctx: RuntimeContext,
         plan_info
     ):
         plan_info = merge(plan_info, {
@@ -163,8 +167,11 @@ class Framework:
             },
             "unit": []
         })
+        plan_result = PlanResult(plan_info["planID"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
         res = pool.map(Framework.run_unit)
+
+        return plan_result
 
     @staticmethod
     def run_unit(
@@ -223,6 +230,23 @@ class Framework:
         return step_result
 
     @staticmethod
+    def plans(customize, constant: RuntimeConstant, directory):
+        for filename in [
+            i
+            for i in os.listdir(directory)
+            if i not in [
+                customize.loadingFiles.ctx,
+                customize.loadingFiles.var,
+                customize.loadingFiles.description,
+            ]
+            and os.path.isfile(os.path.join(directory, i))
+        ]:
+            if not filename.endswith(".yaml"):
+                continue
+            for plan in Framework.load_plan(directory, filename):
+                yield plan
+
+    @staticmethod
     def load_ctx(name, filename):
         dft = {
             "name": name,
@@ -260,3 +284,25 @@ class Framework:
         with open(filename, "r", encoding="utf-8") as fp:
             info = yaml.safe_load(fp)
         return info
+
+    @staticmethod
+    def load_plan(directory, filename):
+        with open(os.path.join(directory, filename), "r", encoding="utf-8") as fp:
+            info = yaml.safe_load(fp)
+            if isinstance(info, dict):
+                yield Framework.format_plan(info, filename, 0)
+            if isinstance(info, list):
+                for idx, item in enumerate(info):
+                    yield Framework.format_plan(item, filename, idx)
+
+    @staticmethod
+    def format_plan(info, filename, idx):
+        text = os.path.splitext(filename)[0]
+        plan_id = "{}-{}".format(text, idx)
+        if idx == 0 and text.rfind("-") == -1:
+            plan_id = text
+        info = merge(info, {
+            "name": REQUIRED,
+            "description": "",
+            "planID": plan_id
+        })
