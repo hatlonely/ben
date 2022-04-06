@@ -20,14 +20,14 @@ seed:
 
 plan:
   - name: ben1
-    seed:
-      req: seed1
     terminal:
-      duration: 1
-      count: 1000
+      seconds: 1
+      times: 1000
     unit:
       - parallel: 10
         qps: 100
+        seed:
+          req: seed1
         step:
           - ctx: shell
             req:

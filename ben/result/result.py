@@ -17,45 +17,53 @@ class StepResult:
 
 @dataclass
 class UnitResult:
-    pass
-
-
-@dataclass
-class PlanResult:
-    id_: str
     success: str
     qps: str
     avgResTime: timedelta
     rate: float
     code: dict
+
+    def to_json(self):
+        return {
+
+        }
+
+    @staticmethod
+    def from_json(obj):
+        res = UnitResult()
+        return res
+
+    def __init__(self):
+        pass
+
+
+@dataclass
+class PlanResult:
+    id_: str
     is_err: bool
     err: str
+    units: list[UnitResult]
 
     def to_json(self):
         return {
             "id": self.id_,
-            "success": self.success,
-            "qps": self.qps,
-            "avgResTime": self.avgResTime,
-            "rate": self.rate,
-            "code": self.code,
             "isErr": self.is_err,
             "err": self.err,
+            "units": self.units
         }
 
     @staticmethod
     def from_json(obj):
         res = PlanResult(obj["id"])
-        res.success = obj["success"]
-        res.qps = obj["qps"]
-        res.avgResTime = obj["avgResTime"]
-        res.rate = obj["rate"]
-        res.code = obj["code"]
         res.is_err = obj["isErr"]
         res.err = obj["err"]
+        res.units = [UnitResult.from_json(i) for i in obj["units"]]
 
     def __init__(self, id_):
         self.id_ = id_
+
+    def add_unit_result(self, unit):
+        self.units.append(unit)
 
 
 @dataclass

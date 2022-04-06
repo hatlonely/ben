@@ -14,6 +14,7 @@ import importlib
 from types import SimpleNamespace
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import repeat
 
 from ..seed import seed_map
 from ..util import merge, REQUIRED, render
@@ -43,7 +44,7 @@ class Framework:
         test_directory=None,
         plan_directory=None,
         customize=None,
-        reporter=None,
+        reporter="text",
         x=None,
         json_result=None,
     ):
@@ -51,6 +52,7 @@ class Framework:
         self.seed_map = seed_map
         self.reporter_map = reporter_map
         self.driver_map = driver_map
+        self.x = None
         if x:
             self.x = Framework.load_x(x)
             if hasattr(self.x, "reporter_map"):
@@ -150,6 +152,10 @@ class Framework:
                 result = Framework.run_plan(directory, customize, constant, rctx, plan_info)
                 test_result.add_plan_result(result)
 
+        for sub_directory in [os.path.join(directory, i) for i in os.listdir(directory) if os.path.isdir(os.path.join(directory, i))]:
+            result = Framework.run_test(sub_directory, customize, constant, rctx)
+            test_result.add_sub_test_result(result)
+
         return test_result
 
     @staticmethod
@@ -163,13 +169,15 @@ class Framework:
         plan_info = merge(plan_info, {
             "name": directory,
             "terminal": {
-                "duration": 1
+                "seconds": 3
             },
             "unit": []
         })
         plan_result = PlanResult(plan_info["planID"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
-        res = pool.map(Framework.run_unit)
+        results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(rctx), [i for i in plan_info["unit"]])
+        for result in results:
+            plan_result.add_unit_result(result)
 
         return plan_result
 
@@ -178,7 +186,6 @@ class Framework:
         customize,
         constant: RuntimeConstant,
         rctx: RuntimeContext,
-        plan,
         unit_info,
     ):
         unit_info = merge(unit_info, {
@@ -186,6 +193,10 @@ class Framework:
             "qps": 0,
             "step": REQUIRED,
         })
+        print(unit_info)
+        unit_result = UnitResult()
+        return unit_result
+
         q = queue.Queue(maxsize=unit_info["parallel"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=unit_info["parallel"])
         pool.submit(Framework.run_steps, customize, constant, rctx, plan, unit_info, queue)
