@@ -7,34 +7,140 @@ from datetime import datetime, timedelta
 
 @dataclass
 class SubStepResult:
-    pass
-
-
-@dataclass
-class StepResult:
-    pass
-
-
-@dataclass
-class UnitResult:
-    success: str
-    qps: str
-    avgResTime: timedelta
-    rate: float
-    code: dict
+    req: any
+    res: any
+    name: str
+    code: str
+    success: bool
+    elapse: timedelta
 
     def to_json(self):
         return {
-
+            "req": self.req,
+            "res": self.res,
+            "name": self.name,
+            "code": self.code,
+            "success": self.success,
+            "elapse": int(self.elapse.total_seconds() * 1000000),
         }
 
     @staticmethod
     def from_json(obj):
-        res = UnitResult()
+        res = SubStepResult(
+            req=obj["req"],
+            res=obj["res"],
+            name=obj["name"],
+            code=obj["code"],
+            success=obj["success"],
+            elapse=timedelta(microseconds=obj["elapse"])
+        )
+        return res
+
+
+@dataclass
+class StepResult:
+    step: list[SubStepResult]
+    code: str
+    success: bool
+    elapse: timedelta
+
+    def to_json(self):
+        return {
+            "step": self.step,
+            "code": self.code,
+            "success": self.success,
+            "elapse": int(self.elapse.total_seconds() * 1000000),
+        }
+
+    @staticmethod
+    def from_json(obj):
+        res = StepResult()
+        res.step = obj["step"]
+        res.code = obj["code"]
+        res.success = obj["success"]
+        res.elapse = timedelta(microseconds=obj["elapse"])
         return res
 
     def __init__(self):
-        pass
+        self.step = []
+        self.code = ""
+        self.success = True
+        self.elapse = timedelta(seconds=0)
+
+    def add_sub_step_result(self, result: SubStepResult):
+        self.step.append(result)
+        self.elapse += result.elapse
+        if not result.success:
+            self.success = False
+            self.code = "{}.{}".format(result.name, result.code)
+
+
+@dataclass
+class UnitResult:
+    name: str
+    success: int
+    total: int
+    qps: float
+    code: dict
+    elapse: timedelta
+    rate: float
+    avgResTime: timedelta
+    start_time: datetime
+    end_time: datetime
+    total_elapse: timedelta
+
+    def to_json(self):
+        return {
+            "success": self.success,
+            "total": self.total,
+            "qps": self.qps,
+            "code": self.code,
+            "elapse": int(self.elapse.total_seconds() * 1000000),
+            "rate": self.rate,
+            "avgResTime": self.avgResTime,
+        }
+
+    @staticmethod
+    def from_json(obj):
+        res = UnitResult(name=obj["name"])
+        res.success = obj["success"]
+        res.total = obj["total"]
+        res.qps = obj["qps"]
+        res.code = obj["code"]
+        res.elapse = timedelta(microseconds=obj["elapse"])
+        res.rate = obj["rate"]
+        res.avgResTime = timedelta(microseconds=obj["avgResTime"])
+        return res
+
+    def __init__(self, name):
+        self.name = name
+        self.success = 0
+        self.total = 0
+        self.qps = 0
+        self.code = {}
+        self.elapse = timedelta(seconds=0)
+        self.rate = 0
+        self.avgResTime = timedelta(seconds=0)
+        self.start_time = datetime.now()
+
+    def add_step_result(self, result: StepResult):
+        self.total += 1
+        if result.success:
+            self.success += 1
+            self.elapse += result.elapse
+        else:
+            if result.code not in self.code:
+                self.code[result.code] = 0
+            self.code[result.code] += 1
+
+    def stop(self):
+        self.end_time = datetime.now()
+        self.total_elapse = self.end_time - self.start_time
+
+    def summary(self):
+        self.qps = self.success / self.total_elapse.total_seconds()
+        self.avgResTime = self.elapse / self.qps
+        self.rate = self.success / self.total
 
 
 @dataclass

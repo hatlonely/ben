@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from itertools import repeat
 
-from ..seed import seed_map
+from ..seed import seed_map, Seed
 from ..util import merge, REQUIRED, render
 from ..driver import Driver, driver_map
 from ..reporter import Reporter, reporter_map
@@ -29,6 +29,7 @@ class RuntimeConstant:
     test_directory: str
     plan_directory: str
     driver_map: dict
+    seed_map: dict
     x: any
 
 
@@ -37,6 +38,7 @@ class RuntimeContext:
     ctx: dict[str, Driver]
     var: SimpleNamespace
     var_info: dict
+    seed: dict[str, Seed]
 
 
 class Framework:
@@ -68,6 +70,7 @@ class Framework:
             test_directory=test_directory,
             plan_directory=test_directory if not plan_directory else os.path.join(test_directory, plan_directory.strip().rstrip("/")),
             driver_map=self.driver_map,
+            seed_map=seed_map,
             x=self.x,
         )
 
@@ -117,6 +120,7 @@ class Framework:
             ctx={},
             var=None,
             var_info={},
+            seed={},
         )
 
         res = Framework.run_test(self.constant.test_directory, self.customize, self.constant, rctx)
@@ -142,6 +146,14 @@ class Framework:
             })
             val = render(val, var=var, x=constant.x, peval=customize.keyPrefix.eval, pexec=customize.keyPrefix.exec, pshell=customize.keyPrefix.shell)
             ctx[key] = constant.driver_map[val["type"]](val["args"])
+        seed = dict([(k, v) for k, v in parent_ctx.seed.items()])
+        for key in info["seed"]:
+            val = merge(info["seed"][key], {
+                "type": REQUIRED,
+                "args": {}
+            })
+            val = render(val, var=var, x=constant.x, peval=customize.keyPrefix.eval, pexec=customize.keyPrefix.exec, pshell=customize.keyPrefix.shell)
+            seed[key] = constant.seed_map[val["type"]](val["args"])
 
         test_result = TestResult(
             constant.test_id,
@@ -154,6 +166,7 @@ class Framework:
             ctx=ctx,
             var=var,
             var_info=var_info,
+            seed=seed,
         )
 
         if directory.startswith(constant.plan_directory):
@@ -201,6 +214,7 @@ class Framework:
         unit_info = merge(unit_info, {
             "parallel": 1,
             "qps": 0,
+            "seed": {},
             "step": REQUIRED,
         })
         print(unit_info)
@@ -209,7 +223,7 @@ class Framework:
 
         q = queue.Queue(maxsize=unit_info["parallel"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=unit_info["parallel"])
-        pool.submit(Framework.run_steps, customize, constant, rctx, plan, unit_info, queue)
+        pool.submit(Framework.run_step, customize, constant, rctx, plan, unit_info, queue)
         success = 0
         while True:
             # terminal
@@ -218,36 +232,18 @@ class Framework:
         return success
 
     @staticmethod
-    def run_steps(
-        customize,
-        constant: RuntimeConstant,
-        rctx: RuntimeContext,
-        plan, seed, step_infos, q: queue.Queue
-    ):
-        ress = []
-        for step_info in step_infos:
-            res = Framework.run_step(
-                customize,
-                constant,
-                rctx,
-                plan, seed, step_info
-            )
-            ress.append(res)
-        q.put(ress)
-
-    @staticmethod
     def run_step(
-        customize,
         constant: RuntimeConstant,
         rctx: RuntimeContext,
-        plan, unit, seed,
+        seed_info,
         step_info,
     ):
         step_result = StepResult()
-        step_start = datetime.now()
-        req = render(step_info["req"], plan=plan, unit=unit, seed=seed, var=rctx.var, x=constant.x)
-        res = rctx.ctx[step_info["ctx"]].do(req)
-        print(res)
+        seed = dict([(k, rctx.seed[v].pick()) for k, v in seed_info.items()])
+        for info in step_info:
+            req = render(info["req"], seed=seed, var=rctx.var, x=constant.x)
+            res = rctx.ctx[info["ctx"]].do(req)
+            print(res)
         return step_result
 
     @staticmethod
