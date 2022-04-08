@@ -11,7 +11,7 @@ from .stop import Stop
 
 def proc(stop):
     cnt = 0
-    for i in stop.next():
+    while stop.next():
         cnt += 1
     return threading.get_ident(), cnt
 

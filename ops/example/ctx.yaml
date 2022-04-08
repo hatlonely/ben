@@ -21,10 +21,10 @@ seed:
 plan:
   - name: ben1
     stop:
-      seconds: 1
+      seconds: 0
       times: 1000
     unit:
-      - parallel: 1
+      - parallel: 10
         qps: 100
         seed:
           req: seed1

@@ -3,6 +3,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from dateutil import parser
 
 
 @dataclass
@@ -98,7 +99,7 @@ class UnitResult:
     code: dict
     elapse: timedelta
     rate: float
-    avgResTime: timedelta
+    res_time: timedelta
     start_time: datetime
     end_time: datetime
     total_elapse: timedelta
@@ -111,7 +112,9 @@ class UnitResult:
             "code": self.code,
             "elapse": int(self.elapse.total_seconds() * 1000000),
             "rate": self.rate,
-            "avgResTime": self.avgResTime,
+            "resTime": int(self.res_time.total_seconds() * 1000000),
+            "startTime": self.start_time.isoformat(),
+            "endTime": self.end_time.isoformat(),
         }
 
     @staticmethod
@@ -123,7 +126,9 @@ class UnitResult:
         res.code = obj["code"]
         res.elapse = timedelta(microseconds=obj["elapse"])
         res.rate = obj["rate"]
-        res.avgResTime = timedelta(microseconds=obj["avgResTime"])
+        res.res_time = timedelta(microseconds=obj["resTime"])
+        res.start_time = parser.parse(obj["startTime"])
+        res.end_time = parser.parse(obj["endTime"])
         return res
 
     def __init__(self, name):
@@ -134,8 +139,10 @@ class UnitResult:
         self.code = {}
         self.elapse = timedelta(seconds=0)
         self.rate = 0
-        self.avgResTime = timedelta(seconds=0)
+        self.res_time = timedelta(seconds=0)
         self.start_time = datetime.now()
+        self.end_time = datetime.now()
+        self.total_elapse = timedelta(seconds=0)
 
     def add_step_result(self, result: StepResult):
         self.total += 1
@@ -147,13 +154,11 @@ class UnitResult:
                 self.code[result.code] = 0
             self.code[result.code] += 1
 
-    def stop(self):
+    def summary(self):
         self.end_time = datetime.now()
         self.total_elapse = self.end_time - self.start_time
-
-    def summary(self):
         self.qps = self.success / self.total_elapse.total_seconds()
-        self.avgResTime = self.elapse / self.qps
+        self.res_time = self.elapse / self.qps
         self.rate = self.success / self.total
 
 

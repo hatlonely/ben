@@ -16,13 +16,13 @@ from types import SimpleNamespace
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import repeat
-import atomics
 
 from ..seed import seed_map, Seed
 from ..util import merge, REQUIRED, render
 from ..driver import Driver, driver_map
 from ..reporter import Reporter, reporter_map
 from ..result import TestResult, PlanResult, UnitResult, StepResult, SubStepResult
+from .stop import Stop
 
 
 @dataclass
@@ -199,15 +199,13 @@ class Framework:
             "unit": []
         })
 
-        stop = {
-            "seconds": plan_info["stop"]["seconds"]
-        }
-
+        stop = Stop(plan_info["stop"])
         plan_result = PlanResult(plan_info["planID"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
-        results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(rctx), repeat(plan_info["stop"]), [i for i in plan_info["unit"]])
+        results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(rctx), repeat(stop), [i for i in plan_info["unit"]])
         for result in results:
             plan_result.add_unit_result(result)
+        print(plan_result)
 
         return plan_result
 
@@ -216,68 +214,77 @@ class Framework:
         customize,
         constant: RuntimeConstant,
         rctx: RuntimeContext,
-        stop_info,
+        stop: Stop,
         unit_info,
     ):
         unit_info = merge(unit_info, {
+            "name": "unit",
             "parallel": 1,
             "qps": 0,
             "seed": {},
             "step": REQUIRED,
         })
 
-        q = queue.Queue(maxsize=unit_info["parallel"]*10)
+        q = queue.Queue(maxsize=unit_info["parallel"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=unit_info["parallel"])
-        ts = datetime.now()
-        count = 0
-        while True:
-            if stop_info["seconds"] != 0 and (datetime.now() - ts).total_seconds() > stop_info["seconds"]:
-                break
-            if stop_info["times"] != 0 and count >= stop_info["times"]:
-                break
-            pool.submit(Framework.run_step, constant, rctx, unit_info["seed"], unit_info["step"], q)
-        for i in range(1):
-            print(q.get())
+        for i in range(unit_info["parallel"]):
+            pool.submit(
+                Framework.run_step,
+                constant,
+                rctx,
+                stop,
+                unit_info["seed"],
+                unit_info["step"],
+                q,
+            )
+        unit_result = UnitResult(name=unit_info["name"])
+        while stop.is_running() or not q.empty():
+            step_result = q.get()
+            unit_result.add_step_result(step_result)
+        unit_result.summary()
+        return unit_result
 
     @staticmethod
     def run_step(
         constant: RuntimeConstant,
         rctx: RuntimeContext,
+        stop: Stop,
         seed_info,
         step_info,
         q: queue.Queue,
     ):
-        step_result = StepResult()
-        seed = dict([(k, rctx.seed[v].pick()) for k, v in seed_info.items()])
-        for idx, info in enumerate(step_info):
-            info = merge(info, {
-                "name": "step-{}".format(idx),
-            })
-            name = info["name"]
-            try:
+        while stop.next():
+            step_result = StepResult()
+            seed = dict([(k, rctx.seed[v].pick()) for k, v in seed_info.items()])
+            for idx, info in enumerate(step_info):
                 info = merge(info, {
-                    "ctx": REQUIRED,
-                    "req": REQUIRED,
-                    "res": REQUIRED,
+                    "name": "step-{}".format(idx),
                 })
-                req = render(info["req"], seed=seed, var=rctx.var, x=constant.x)
-                name = rctx.ctx[info["ctx"]].name(req)
-                ts = datetime.now()
-                res = rctx.ctx[info["ctx"]].do(req)
-                elapse = datetime.now() - ts
+                name = info["name"]
+                try:
+                    info = merge(info, {
+                        "ctx": REQUIRED,
+                        "req": REQUIRED,
+                        "res": REQUIRED,
+                    })
+                    req = render(info["req"], seed=seed, var=rctx.var, x=constant.x)
+                    name = rctx.ctx[info["ctx"]].name(req)
+                    ts = datetime.now()
+                    res = rctx.ctx[info["ctx"]].do(req)
+                    elapse = datetime.now() - ts
 
-                render_res = render(info["res"], res=res, seed=seed, var=rctx.var, x=constant.x)
-                step_result.add_sub_step_result(SubStepResult(
-                    req=req,
-                    res=res,
-                    name=name,
-                    code=render_res["groupby"],
-                    success=render_res["groupby"] == render_res["success"],
-                    elapse=elapse,
-                ))
-            except Exception as e:
-                step_result.add_err_result(name, "Exception {}".format(traceback.format_exc()))
-        q.put(step_result)
+                    render_res = render(info["res"], res=res, seed=seed, var=rctx.var, x=constant.x)
+                    step_result.add_sub_step_result(SubStepResult(
+                        req=req,
+                        res=res,
+                        name=name,
+                        code=render_res["groupby"],
+                        success=render_res["groupby"] == render_res["success"],
+                        elapse=elapse,
+                    ))
+                except Exception as e:
+                    step_result.add_err_result(name, "Exception {}".format(traceback.format_exc()))
+            q.put(step_result)
 
     @staticmethod
     def plans(customize, constant: RuntimeConstant, info, directory):
