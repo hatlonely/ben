@@ -4,6 +4,7 @@
 import concurrent.futures
 import copy
 import json
+import traceback
 import uuid
 import os
 import yaml
@@ -20,7 +21,7 @@ from ..seed import seed_map, Seed
 from ..util import merge, REQUIRED, render
 from ..driver import Driver, driver_map
 from ..reporter import Reporter, reporter_map
-from ..result import TestResult, PlanResult, UnitResult, StepResult
+from ..result import TestResult, PlanResult, UnitResult, StepResult, SubStepResult
 
 
 @dataclass
@@ -218,18 +219,12 @@ class Framework:
             "step": REQUIRED,
         })
         print(unit_info)
-        unit_result = UnitResult()
-        return unit_result
-
         q = queue.Queue(maxsize=unit_info["parallel"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=unit_info["parallel"])
-        pool.submit(Framework.run_step, customize, constant, rctx, plan, unit_info, queue)
-        success = 0
-        while True:
-            # terminal
-            item = q.get()
-            success += 1
-        return success
+        for i in range(1):
+            pool.submit(Framework.run_step, constant, rctx, unit_info["seed"], unit_info["step"], q)
+        for i in range(1):
+            print(q.get())
 
     @staticmethod
     def run_step(
@@ -237,14 +232,39 @@ class Framework:
         rctx: RuntimeContext,
         seed_info,
         step_info,
+        q: queue.Queue,
     ):
         step_result = StepResult()
         seed = dict([(k, rctx.seed[v].pick()) for k, v in seed_info.items()])
-        for info in step_info:
-            req = render(info["req"], seed=seed, var=rctx.var, x=constant.x)
-            res = rctx.ctx[info["ctx"]].do(req)
-            print(res)
-        return step_result
+        for idx, info in enumerate(step_info):
+            info = merge(info, {
+                "name": "step-{}".format(idx),
+            })
+            name = info["name"]
+            try:
+                info = merge(info, {
+                    "ctx": REQUIRED,
+                    "req": REQUIRED,
+                    "res": REQUIRED,
+                })
+                req = render(info["req"], seed=seed, var=rctx.var, x=constant.x)
+                name = rctx.ctx[info["ctx"]].name(req)
+                ts = datetime.now()
+                res = rctx.ctx[info["ctx"]].do(req)
+                elapse = datetime.now() - ts
+
+                render_res = render(info["res"], res=res, seed=seed, var=rctx.var, x=constant.x)
+                step_result.add_sub_step_result(SubStepResult(
+                    req=req,
+                    res=res,
+                    name=name,
+                    code=render_res["groupby"],
+                    success=render_res["groupby"] == render_res["success"],
+                    elapse=elapse,
+                ))
+            except Exception as e:
+                step_result.add_err_result(name, "Exception {}".format(traceback.format_exc()))
+        q.put(step_result)
 
     @staticmethod
     def plans(customize, constant: RuntimeConstant, info, directory):

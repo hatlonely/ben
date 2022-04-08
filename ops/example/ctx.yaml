@@ -24,17 +24,17 @@ plan:
       seconds: 1
       times: 1000
     unit:
-      - parallel: 10
+      - parallel: 1
         qps: 100
         seed:
           req: seed1
         step:
-          - ctx: shell
+          - ctx: sh
             req:
               command: echo -n ${KEY1} ${KEY2}
               envs:
-                "#KEY1": seed.req.key1
-                "#KEY2": seed.req.key2
+                "#KEY1": seed["req"]["key1"]
+                "#KEY2": seed["req"]["key2"]
             res:
-              groupby: res["exitCode"]
+              "#groupby": res["exitCode"]
               success: 0

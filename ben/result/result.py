@@ -43,6 +43,8 @@ class StepResult:
     code: str
     success: bool
     elapse: timedelta
+    is_err: bool
+    err: str
 
     def to_json(self):
         return {
@@ -50,6 +52,8 @@ class StepResult:
             "code": self.code,
             "success": self.success,
             "elapse": int(self.elapse.total_seconds() * 1000000),
+            "isErr": self.is_err,
+            "err": self.err,
         }
 
     @staticmethod
@@ -59,6 +63,8 @@ class StepResult:
         res.code = obj["code"]
         res.success = obj["success"]
         res.elapse = timedelta(microseconds=obj["elapse"])
+        res.is_err = obj["isErr"]
+        res.err = obj["err"]
         return res
 
     def __init__(self):
@@ -66,6 +72,8 @@ class StepResult:
         self.code = ""
         self.success = True
         self.elapse = timedelta(seconds=0)
+        self.is_err = False
+        self.err = ""
 
     def add_sub_step_result(self, result: SubStepResult):
         self.step.append(result)
@@ -73,6 +81,12 @@ class StepResult:
         if not result.success:
             self.success = False
             self.code = "{}.{}".format(result.name, result.code)
+
+    def add_err_result(self, name, err):
+        self.is_err = True
+        self.err = err
+        self.success = False
+        self.code = "{}.{}".format(name, "ERROR")
 
 
 @dataclass
