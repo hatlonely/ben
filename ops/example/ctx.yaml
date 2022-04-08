@@ -20,7 +20,7 @@ seed:
 
 plan:
   - name: ben1
-    terminal:
+    stop:
       seconds: 1
       times: 1000
     unit:

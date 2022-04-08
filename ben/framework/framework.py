@@ -16,6 +16,7 @@ from types import SimpleNamespace
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import repeat
+import atomics
 
 from ..seed import seed_map, Seed
 from ..util import merge, REQUIRED, render
@@ -191,15 +192,20 @@ class Framework:
     ):
         plan_info = merge(plan_info, {
             "name": directory,
-            "terminal": {
-                "seconds": 3
+            "stop": {
+                "seconds": 3,
+                "times": 0
             },
             "unit": []
         })
-        print(plan_info["unit"])
+
+        stop = {
+            "seconds": plan_info["stop"]["seconds"]
+        }
+
         plan_result = PlanResult(plan_info["planID"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
-        results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(rctx), [i for i in plan_info["unit"]])
+        results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(rctx), repeat(plan_info["stop"]), [i for i in plan_info["unit"]])
         for result in results:
             plan_result.add_unit_result(result)
 
@@ -210,6 +216,7 @@ class Framework:
         customize,
         constant: RuntimeConstant,
         rctx: RuntimeContext,
+        stop_info,
         unit_info,
     ):
         unit_info = merge(unit_info, {
@@ -218,10 +225,16 @@ class Framework:
             "seed": {},
             "step": REQUIRED,
         })
-        print(unit_info)
-        q = queue.Queue(maxsize=unit_info["parallel"])
+
+        q = queue.Queue(maxsize=unit_info["parallel"]*10)
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=unit_info["parallel"])
-        for i in range(1):
+        ts = datetime.now()
+        count = 0
+        while True:
+            if stop_info["seconds"] != 0 and (datetime.now() - ts).total_seconds() > stop_info["seconds"]:
+                break
+            if stop_info["times"] != 0 and count >= stop_info["times"]:
+                break
             pool.submit(Framework.run_step, constant, rctx, unit_info["seed"], unit_info["step"], q)
         for i in range(1):
             print(q.get())
