@@ -205,8 +205,6 @@ class Framework:
         results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(rctx), repeat(stop), [i for i in plan_info["unit"]])
         for result in results:
             plan_result.add_unit_result(result)
-        print(plan_result)
-
         return plan_result
 
     @staticmethod
