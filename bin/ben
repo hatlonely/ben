@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+
+
+import argparse
+import sys
+from ben.framework import Framework
+
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def main():
+    parser = argparse.ArgumentParser(formatter_class=lambda prog: argparse.RawTextHelpFormatter(prog, width=200), description="""example:
+  ben -t ops/example
+""")
+    parser.add_argument("-r", "--reporter", default="text", help="test report format. Built in support of `html/json/text`. Support user defined extension in `x`")
+    parser.add_argument("-t", "--test", help="test root directory")
+    parser.add_argument("-p", "--plan", help="test plan directory")
+    parser.add_argument("--json-result", help="json result report. If you specify this field, you can convert the JSON report to another format report")
+
+    args = parser.parse_args()
+
+    fw = Framework(
+        test_directory=args.test,
+        plan_directory=args.plan,
+        reporter=args.reporter,
+    )
+
+    if args.json_result:
+        fw.format()
+    elif not fw.run():
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
