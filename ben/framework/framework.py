@@ -17,10 +17,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from itertools import repeat
 
-from ..seed import seed_map, Seed
 from ..util import merge, REQUIRED, render
+from ..seed import seed_map, Seed
 from ..driver import Driver, driver_map
 from ..reporter import reporter_map
+from ..hook import Hook, hook_map
 from ..result import TestResult, PlanResult, UnitResult, StepResult, SubStepResult
 from .stop import Stop
 
@@ -32,6 +33,7 @@ class RuntimeConstant:
     plan_directory: str
     driver_map: dict
     seed_map: dict
+    hooks: list[Hook]
     x: any
 
 
@@ -52,11 +54,14 @@ class Framework:
         reporter="text",
         x=None,
         json_result=None,
+        hook=None,
+        lang=None,
     ):
 
         self.seed_map = seed_map
         self.reporter_map = reporter_map
         self.driver_map = driver_map
+        self.hook_map = hook_map
         self.x = None
         if x:
             self.x = Framework.load_x(x)
@@ -66,19 +71,13 @@ class Framework:
                 self.seed_map = self.seed_map | self.x.seed_map
             if hasattr(self.x, "driver_map"):
                 self.driver_map = self.driver_map | self.x.driver_map
-
-        self.constant = RuntimeConstant(
-            test_id=uuid.uuid4().hex,
-            test_directory=test_directory,
-            plan_directory=test_directory if not plan_directory else os.path.join(test_directory, plan_directory.strip().rstrip("/")),
-            driver_map=self.driver_map,
-            seed_map=seed_map,
-            x=self.x,
-        )
+            if hasattr(self.x, "hook_map"):
+                self.hook_map = self.hook_map | self.x.hook_map
 
         if not customize and os.path.exists(os.path.join(pathlib.Path.home(), ".ben/customize.yaml")):
             customize = os.path.join(pathlib.Path.home(), ".ben/customize.yaml")
 
+        hooks = hook.split(",") if hook else []
         cfg = {}
         if customize:
             with open(customize, "r", encoding="utf-8") as fp:
@@ -89,6 +88,7 @@ class Framework:
                     "i18n": {}
                 }
             },
+            "hook": dict([(i, {"i18n": {}}) for i in hooks]),
             "framework": {
                 "keyPrefix": {
                     "eval": "#",
@@ -110,9 +110,29 @@ class Framework:
             pshell=cfg["framework"]["keyPrefix"]["shell"],
         )
 
+        if "i18n" in cfg:
+            cfg["reporter"][reporter] = merge(cfg["reporter"][reporter], cfg["i18n"])
+            for key in hooks:
+                cfg["hook"][key] = merge(cfg["hook"][key], cfg["i18n"])
+        if lang:
+            cfg["reporter"][reporter]["lang"] = lang
+            for key in hooks:
+                cfg["hook"][key]["lang"] = lang
+
         self.customize = json.loads(json.dumps(cfg["framework"]), object_hook=lambda y: SimpleNamespace(**y))
         self.reporter = self.reporter_map[reporter](cfg["reporter"][reporter])
         self.json_result = json_result
+        self.hooks = [self.hook_map[i](cfg["hook"][i], test_id=self.constant.test_id) for i in hooks]
+
+        self.constant = RuntimeConstant(
+            test_id=uuid.uuid4().hex,
+            test_directory=test_directory,
+            plan_directory=test_directory if not plan_directory else os.path.join(test_directory, plan_directory.strip().rstrip("/")),
+            driver_map=self.driver_map,
+            seed_map=seed_map,
+            x=self.x,
+            hooks=self.hooks,
+        )
 
     def format(self):
         pass
