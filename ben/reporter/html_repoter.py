@@ -142,37 +142,37 @@ _unit_group_tpl = """
 <div class="card" id="{{ name }}">
     {% if group.is_err %}<div class="card border-danger">{% else %}<div class="card border-success">{% endif %}
 
-    <table class="table table-striped">
-        <thead>
-            <tr class="text-center">
-                <th>{{ i18n.title.seconds }}</th>
-                <th>{{ i18n.title.times }}</th>
-                <th>{{ i18n.title.unit }}</th>
-                <th>{{ i18n.title.parallel }}</th>
-                <th>{{ i18n.title.limit }}</th>
-                <th>{{ i18n.title.total }}</th>
-                <th>{{ i18n.title.rate }}</th>
-                <th>{{ i18n.title.qps }}</th>
-                <th>{{ i18n.title.resTime }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for unit in group.units %}
-            <tr class="text-center">
-                <td>{{ group.seconds }}</td>
-                <td>{{ group.times }}</td>
-                <td>{{ unit.name }}</td>
-                <td>{{ unit.parallel }}</td>
-                <td>{{ unit.limit }}</td>
-                <td>{{ unit.total }}</td>
-                <td>{{ int(unit.rate * 10000) / 100 }}%</td>
-                <td>{{ int(unit.qps) }}</td>
-                <td>{{ format_timedelta(unit.res_time) }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr class="text-center">
+                    <th>{{ i18n.title.seconds }}</th>
+                    <th>{{ i18n.title.times }}</th>
+                    <th>{{ i18n.title.unit }}</th>
+                    <th>{{ i18n.title.parallel }}</th>
+                    <th>{{ i18n.title.limit }}</th>
+                    <th>{{ i18n.title.total }}</th>
+                    <th>{{ i18n.title.rate }}</th>
+                    <th>{{ i18n.title.qps }}</th>
+                    <th>{{ i18n.title.resTime }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for unit in group.units %}
+                <tr class="text-center">
+                    <td>{{ group.seconds }}</td>
+                    <td>{{ group.times }}</td>
+                    <td>{{ unit.name }}</td>
+                    <td>{{ unit.parallel }}</td>
+                    <td>{{ unit.limit }}</td>
+                    <td>{{ unit.total }}</td>
+                    <td>{{ int(unit.rate * 10000) / 100 }}%</td>
+                    <td>{{ int(unit.qps) }}</td>
+                    <td>{{ format_timedelta(unit.res_time) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 """
