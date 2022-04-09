@@ -179,7 +179,7 @@ _unit_group_tpl = """
 
     {# Code #}
     <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.code }}</span></div>
-    <div class="card-body">
+    <div class="card-body d-flex justify-content-center">
         {% for unit in group.units %}
         {% if unit.code %}
         <div id="{{ '{}-unit-{}'.format(name, loop.index0) }}" style="width: 300px;height:300px;"></div>
