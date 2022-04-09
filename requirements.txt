@@ -11,3 +11,5 @@ PyYAML~=6.0
 thrift~=0.15.0
 elasticsearch~=7.16.3
 atomics~=1.0.2
+Markdown~=3.3.6
+Jinja2~=3.0.3
