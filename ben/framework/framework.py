@@ -273,6 +273,8 @@ class Framework:
         stop: Stop,
         unit_info,
     ):
+        unit_info = merge(unit_info, {"name": "unit"})
+
         for hook in constant.hooks:
             hook.on_unit_start(unit_info)
 
@@ -294,7 +296,6 @@ class Framework:
         unit_info,
     ):
         unit_info = merge(unit_info, {
-            "name": "unit",
             "parallel": 1,
             "qps": 0,
             "seed": {},
@@ -305,7 +306,8 @@ class Framework:
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=unit_info["parallel"])
         for i in range(unit_info["parallel"]):
             pool.submit(
-                Framework.run_step,
+                Framework.must_run_step,
+                customize,
                 constant,
                 context,
                 stop,
@@ -321,7 +323,8 @@ class Framework:
         return unit_result
 
     @staticmethod
-    def run_step(
+    def must_run_step(
+        customize,
         constant: RuntimeConstant,
         context: RuntimeContext,
         stop: Stop,
@@ -330,37 +333,57 @@ class Framework:
         q: queue.Queue,
     ):
         while stop.next():
-            step_result = StepResult()
-            seed = dict([(k, context.seed[v].pick()) for k, v in seed_info.items()])
-            for idx, info in enumerate(step_info):
-                info = merge(info, {
-                    "name": "step-{}".format(idx),
-                })
-                name = info["name"]
-                try:
-                    info = merge(info, {
-                        "ctx": REQUIRED,
-                        "req": REQUIRED,
-                        "res": REQUIRED,
-                    })
-                    req = render(info["req"], seed=seed, var=context.var, x=constant.x)
-                    name = context.ctx[info["ctx"]].name(req)
-                    ts = datetime.now()
-                    res = context.ctx[info["ctx"]].do(req)
-                    elapse = datetime.now() - ts
+            for hook in constant.hooks:
+                hook.on_step_start(step_info)
 
-                    render_res = render(info["res"], res=res, seed=seed, var=context.var, x=constant.x)
-                    step_result.add_sub_step_result(SubStepResult(
-                        req=req,
-                        res=res,
-                        name=name,
-                        code=render_res["groupby"],
-                        success=render_res["groupby"] == render_res["success"],
-                        elapse=elapse,
-                    ))
-                except Exception as e:
-                    step_result.add_err_result(name, "Exception {}".format(traceback.format_exc()))
-            q.put(step_result)
+            try:
+                result = Framework.run_step(customize, constant, context, seed_info, step_info)
+            except Exception as e:
+                result = StepResult()
+            q.put(result)
+
+            for hook in constant.hooks:
+                hook.on_step_end(step_info)
+
+    @staticmethod
+    def run_step(
+        customize,
+        constant: RuntimeConstant,
+        context: RuntimeContext,
+        seed_info,
+        step_info,
+    ):
+        step_result = StepResult()
+        seed = dict([(k, context.seed[v].pick()) for k, v in seed_info.items()])
+        for idx, info in enumerate(step_info):
+            info = merge(info, {
+                "name": "step-{}".format(idx),
+            })
+            name = info["name"]
+            try:
+                info = merge(info, {
+                    "ctx": REQUIRED,
+                    "req": REQUIRED,
+                    "res": REQUIRED,
+                })
+                req = render(info["req"], seed=seed, var=context.var, x=constant.x, peval=customize.keyPrefix.eval, pexec=customize.keyPrefix.exec, pshell=customize.keyPrefix.shell)
+                name = context.ctx[info["ctx"]].name(req)
+                ts = datetime.now()
+                res = context.ctx[info["ctx"]].do(req)
+                elapse = datetime.now() - ts
+
+                render_res = render(info["res"], res=res, seed=seed, var=context.var, x=constant.x, peval=customize.keyPrefix.eval, pexec=customize.keyPrefix.exec, pshell=customize.keyPrefix.shell)
+                step_result.add_sub_step_result(SubStepResult(
+                    req=req,
+                    res=res,
+                    name=name,
+                    code=render_res["groupby"],
+                    success=render_res["groupby"] == render_res["success"],
+                    elapse=elapse,
+                ))
+            except Exception as e:
+                step_result.add_err_result(name, "Exception {}".format(traceback.format_exc()))
+        return step_result
 
     @staticmethod
     def plans(customize, constant: RuntimeConstant, info, directory):
