@@ -138,15 +138,34 @@ class Framework:
         pass
 
     def run(self):
-        rctx = RuntimeContext(
+        context = RuntimeContext(
             ctx={},
             var=None,
             var_info={},
             seed={},
         )
 
-        res = Framework.run_test(self.constant.test_directory, self.customize, self.constant, rctx)
+        res = Framework.must_run_test(self.constant.test_directory, self.customize, self.constant, context)
         print(self.reporter.report(res))
+
+    @staticmethod
+    def must_run_test(
+        directory: str,
+        customize,
+        constant: RuntimeConstant,
+        context: RuntimeContext,
+    ):
+        for hook in constant.hooks:
+            hook.on_test_start(directory)
+
+        try:
+            result = Framework.run_test(directory, customize, constant, context)
+        except Exception as e:
+            result = TestResult(constant.test_id, directory, directory, "", "Exception {}".format(traceback.format_exc()))
+
+        for hook in constant.hooks:
+            hook.on_test_end(result)
+        return  result
 
     @staticmethod
     def run_test(
@@ -184,7 +203,7 @@ class Framework:
             description=description,
         )
 
-        rctx = RuntimeContext(
+        context = RuntimeContext(
             ctx=ctx,
             var=var,
             var_info=var_info,
@@ -193,11 +212,11 @@ class Framework:
 
         if directory.startswith(constant.plan_directory):
             for plan_info in Framework.plans(customize, constant, info, directory):
-                result = Framework.run_plan(directory, customize, constant, rctx, plan_info)
+                result = Framework.run_plan(directory, customize, constant, context, plan_info)
                 test_result.add_plan_result(result)
 
         for sub_directory in [os.path.join(directory, i) for i in os.listdir(directory) if os.path.isdir(os.path.join(directory, i))]:
-            result = Framework.run_test(sub_directory, customize, constant, rctx)
+            result = Framework.run_test(sub_directory, customize, constant, context)
             test_result.add_sub_test_result(result)
 
         return test_result
@@ -207,7 +226,7 @@ class Framework:
         directory,
         customize,
         constant: RuntimeConstant,
-        rctx: RuntimeContext,
+        context: RuntimeContext,
         plan_info
     ):
         plan_info = merge(plan_info, {
@@ -222,7 +241,7 @@ class Framework:
         stop = Stop(plan_info["stop"])
         plan_result = PlanResult(plan_info["planID"], plan_info["name"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
-        results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(rctx), repeat(stop), [i for i in plan_info["unit"]])
+        results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(context), repeat(stop), [i for i in plan_info["unit"]])
         for result in results:
             plan_result.add_unit_result(result)
         return plan_result
@@ -231,7 +250,7 @@ class Framework:
     def run_unit(
         customize,
         constant: RuntimeConstant,
-        rctx: RuntimeContext,
+        context: RuntimeContext,
         stop: Stop,
         unit_info,
     ):
@@ -249,7 +268,7 @@ class Framework:
             pool.submit(
                 Framework.run_step,
                 constant,
-                rctx,
+                context,
                 stop,
                 unit_info["seed"],
                 unit_info["step"],
@@ -265,7 +284,7 @@ class Framework:
     @staticmethod
     def run_step(
         constant: RuntimeConstant,
-        rctx: RuntimeContext,
+        context: RuntimeContext,
         stop: Stop,
         seed_info,
         step_info,
@@ -273,7 +292,7 @@ class Framework:
     ):
         while stop.next():
             step_result = StepResult()
-            seed = dict([(k, rctx.seed[v].pick()) for k, v in seed_info.items()])
+            seed = dict([(k, context.seed[v].pick()) for k, v in seed_info.items()])
             for idx, info in enumerate(step_info):
                 info = merge(info, {
                     "name": "step-{}".format(idx),
@@ -285,13 +304,13 @@ class Framework:
                         "req": REQUIRED,
                         "res": REQUIRED,
                     })
-                    req = render(info["req"], seed=seed, var=rctx.var, x=constant.x)
-                    name = rctx.ctx[info["ctx"]].name(req)
+                    req = render(info["req"], seed=seed, var=context.var, x=constant.x)
+                    name = context.ctx[info["ctx"]].name(req)
                     ts = datetime.now()
-                    res = rctx.ctx[info["ctx"]].do(req)
+                    res = context.ctx[info["ctx"]].do(req)
                     elapse = datetime.now() - ts
 
-                    render_res = render(info["res"], res=res, seed=seed, var=rctx.var, x=constant.x)
+                    render_res = render(info["res"], res=res, seed=seed, var=context.var, x=constant.x)
                     step_result.add_sub_step_result(SubStepResult(
                         req=req,
                         res=res,
