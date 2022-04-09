@@ -20,13 +20,13 @@ seed:
 
 plan:
   - name: ben1
-    stop:
-      seconds: 0
-      times: 1000
+    group:
+      - times: 1000
+        parallel: [10]
+      - seconds: 2
+        parallel: [10]
     unit:
-      - parallel: 10
-        qps: 100
-        seed:
+      - seed:
           req: seed1
         step:
           - ctx: sh
