@@ -68,13 +68,16 @@ class StepResult:
         res.err = obj["err"]
         return res
 
-    def __init__(self):
+    def __init__(self, err_message=None):
         self.step = []
         self.code = ""
         self.success = True
         self.elapse = timedelta(seconds=0)
         self.is_err = False
         self.err = ""
+        if err_message:
+            self.is_err = True
+            self.err = err_message
 
     def add_sub_step_result(self, result: SubStepResult):
         self.step.append(result)
