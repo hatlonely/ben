@@ -17,8 +17,8 @@ class DebugHook(Hook):
         self.padding_to_add = args["padding"]
         self.padding = ""
 
-    def on_test_start(self, test_info):
-        print("{}{i18n.title.test} {name}".format(self.padding, name=test_info["name"], i18n=self.i18n))
+    def on_test_start(self, directory):
+        print("{}{i18n.title.test} {name}".format(self.padding, name=directory, i18n=self.i18n))
         self.padding += self.padding_to_add
 
     def on_test_end(self, res: TestResult):

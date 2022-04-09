@@ -165,7 +165,7 @@ class Framework:
 
         for hook in constant.hooks:
             hook.on_test_end(result)
-        return  result
+        return result
 
     @staticmethod
     def run_test(
@@ -212,14 +212,34 @@ class Framework:
 
         if directory.startswith(constant.plan_directory):
             for plan_info in Framework.plans(customize, constant, info, directory):
-                result = Framework.run_plan(directory, customize, constant, context, plan_info)
+                result = Framework.must_run_plan(directory, customize, constant, context, plan_info)
                 test_result.add_plan_result(result)
 
         for sub_directory in [os.path.join(directory, i) for i in os.listdir(directory) if os.path.isdir(os.path.join(directory, i))]:
-            result = Framework.run_test(sub_directory, customize, constant, context)
+            result = Framework.must_run_test(sub_directory, customize, constant, context)
             test_result.add_sub_test_result(result)
 
         return test_result
+
+    @staticmethod
+    def must_run_plan(
+        directory,
+        customize,
+        constant: RuntimeConstant,
+        context: RuntimeContext,
+        plan_info
+    ):
+        for hook in constant.hooks:
+            hook.on_plan_start(plan_info)
+
+        try:
+            result = Framework.run_plan(directory, customize, constant, context, plan_info)
+        except Exception as e:
+            result = PlanResult(plan_info["planID"], plan_info["name"], "Exception {}".format(traceback.format_exc()))
+
+        for hook in constant.hooks:
+            hook.on_plan_end(result)
+        return result
 
     @staticmethod
     def run_plan(
@@ -230,7 +250,6 @@ class Framework:
         plan_info
     ):
         plan_info = merge(plan_info, {
-            "name": directory,
             "stop": {
                 "seconds": 3,
                 "times": 0
@@ -241,10 +260,30 @@ class Framework:
         stop = Stop(plan_info["stop"])
         plan_result = PlanResult(plan_info["planID"], plan_info["name"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
-        results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(context), repeat(stop), [i for i in plan_info["unit"]])
+        results = pool.map(Framework.must_run_unit, repeat(customize), repeat(constant), repeat(context), repeat(stop), [i for i in plan_info["unit"]])
         for result in results:
             plan_result.add_unit_result(result)
         return plan_result
+
+    @staticmethod
+    def must_run_unit(
+        customize,
+        constant: RuntimeConstant,
+        context: RuntimeContext,
+        stop: Stop,
+        unit_info,
+    ):
+        for hook in constant.hooks:
+            hook.on_unit_start(unit_info)
+
+        try:
+            result = Framework.run_unit(customize, constant, context, stop, unit_info)
+        except Exception as e:
+            result = UnitResult(unit_info["name"], err_message="Exception {}".format(traceback.format_exc()))
+
+        for hook in constant.hooks:
+            hook.on_unit_end(result)
+        return result
 
     @staticmethod
     def run_unit(
@@ -400,7 +439,7 @@ class Framework:
         if idx == 0 and text.rfind("-") == -1:
             plan_id = text
         info = merge(info, {
-            "name": REQUIRED,
+            "name": plan_id,
             "description": "",
             "planID": plan_id
         })

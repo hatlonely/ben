@@ -13,7 +13,7 @@ class Hook:
     def on_exit(self, res: TestResult):
         pass
 
-    def on_test_start(self, test_info):
+    def on_test_start(self, directory):
         pass
 
     def on_test_end(self, res: TestResult):

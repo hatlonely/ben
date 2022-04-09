@@ -103,6 +103,8 @@ class UnitResult:
     start_time: datetime
     end_time: datetime
     total_elapse: timedelta
+    is_err: bool
+    err: str
 
     def to_json(self):
         return {
@@ -115,6 +117,8 @@ class UnitResult:
             "resTime": int(self.res_time.total_seconds() * 1000000),
             "startTime": self.start_time.isoformat(),
             "endTime": self.end_time.isoformat(),
+            "isErr": self.is_err,
+            "err": self.err,
         }
 
     @staticmethod
@@ -129,9 +133,11 @@ class UnitResult:
         res.res_time = timedelta(microseconds=obj["resTime"])
         res.start_time = parser.parse(obj["startTime"])
         res.end_time = parser.parse(obj["endTime"])
+        res.is_err = obj["isErr"]
+        res.err = obj["err"]
         return res
 
-    def __init__(self, name):
+    def __init__(self, name, err_message=None):
         self.name = name
         self.success = 0
         self.total = 0
@@ -143,6 +149,11 @@ class UnitResult:
         self.start_time = datetime.now()
         self.end_time = datetime.now()
         self.total_elapse = timedelta(seconds=0)
+        self.is_err = False
+        self.err = ""
+        if err_message:
+            self.is_err = True
+            self.err = err_message
 
     def add_step_result(self, result: StepResult):
         self.total += 1
@@ -186,12 +197,15 @@ class PlanResult:
         res.err = obj["err"]
         res.units = [UnitResult.from_json(i) for i in obj["units"]]
 
-    def __init__(self, id_, name):
+    def __init__(self, id_, name, err_message=None):
         self.id_ = id_
         self.name = name
+        self.units = []
         self.is_err = False
         self.err = ""
-        self.units = []
+        if err_message:
+            self.is_err = True
+            self.err = err_message
 
     def add_unit_result(self, unit):
         self.units.append(unit)
