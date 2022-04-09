@@ -200,7 +200,7 @@ class Framework:
         })
 
         stop = Stop(plan_info["stop"])
-        plan_result = PlanResult(plan_info["planID"])
+        plan_result = PlanResult(plan_info["planID"], plan_info["name"])
         pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
         results = pool.map(Framework.run_unit, repeat(customize), repeat(constant), repeat(rctx), repeat(stop), [i for i in plan_info["unit"]])
         for result in results:

@@ -165,6 +165,7 @@ class UnitResult:
 @dataclass
 class PlanResult:
     id_: str
+    name: str
     is_err: bool
     err: str
     units: list[UnitResult]
@@ -172,6 +173,7 @@ class PlanResult:
     def to_json(self):
         return {
             "id": self.id_,
+            "name": self.name,
             "isErr": self.is_err,
             "err": self.err,
             "units": self.units
@@ -179,13 +181,14 @@ class PlanResult:
 
     @staticmethod
     def from_json(obj):
-        res = PlanResult(obj["id"])
+        res = PlanResult(obj["id"], obj["name"])
         res.is_err = obj["isErr"]
         res.err = obj["err"]
         res.units = [UnitResult.from_json(i) for i in obj["units"]]
 
-    def __init__(self, id_):
+    def __init__(self, id_, name):
         self.id_ = id_
+        self.name = name
         self.is_err = False
         self.err = ""
         self.units = []
