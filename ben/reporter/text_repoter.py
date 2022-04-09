@@ -62,16 +62,17 @@ class TextReporter(Reporter):
     def _format_unit(self, res: UnitResult) -> list[str]:
         lines = [
             "{}{i18n.title.unit} {res.name} "
-            "{i18n.title.parallel} {res.parallel}, "
-            "{i18n.title.limit} {res.limit}, "
-            "{i18n.title.qps} {qps}, "
-            "{i18n.title.resTime} {res_time}, "
-            "{i18n.title.rate} {rate}%"
+            "{i18n.title.parallel}: {res.parallel}, "
+            "{i18n.title.limit}: {res.limit}, "
+            "{i18n.title.total}: {res.total}, "
+            "{i18n.title.rate}: {rate}%, "
+            "{i18n.title.qps}: {qps}, "
+            "{i18n.title.resTime}: {res_time}, "
             "".format(
                 self.padding, res=res, i18n=self.i18n,
                 res_time=durationpy.to_str(res.res_time),
                 qps=int(res.qps),
-                rate=int(res.rate * 100)
+                rate=int(res.rate * 10000) / 100.0
             )
         ]
         return lines

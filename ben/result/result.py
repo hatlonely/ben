@@ -179,7 +179,7 @@ class UnitResult:
         self.end_time = datetime.now()
         self.total_elapse = self.end_time - self.start_time
         self.qps = self.success / self.total_elapse.total_seconds()
-        self.res_time = self.elapse / self.qps
+        self.res_time = self.elapse / self.success
         self.rate = self.success / self.total
 
 
