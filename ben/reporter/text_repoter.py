@@ -45,7 +45,6 @@ class TextReporter(Reporter):
             return lines
         for unit_group in res.unit_groups:
             lines.extend([self.padding + i for i in self._format_unit_group(unit_group)])
-        lines.append("{}{i18n.title.plan} {res.name}".format(self.padding, res=res, i18n=self.i18n))
         return lines
 
     def _format_unit_group(self, res: UnitGroup):
@@ -67,7 +66,7 @@ class TextReporter(Reporter):
             "{i18n.title.total}: {res.total}, "
             "{i18n.title.rate}: {rate}%, "
             "{i18n.title.qps}: {qps}, "
-            "{i18n.title.resTime}: {res_time}, "
+            "{i18n.title.resTime}: {res_time}"
             "".format(
                 self.padding, res=res, i18n=self.i18n,
                 res_time=durationpy.to_str(res.res_time),
@@ -76,69 +75,3 @@ class TextReporter(Reporter):
             )
         ]
         return lines
-
-
-xx = {
-  "id": "c09aafc994ea4829b6315da7939e7b1e",
-  "directory": "ops/example",
-  "name": "ben-example",
-  "description": "",
-  "isErr": False,
-  "err": "",
-  "plans": [
-    {
-      "id": "ctx",
-      "name": "ben1",
-      "isErr": False,
-      "err": "",
-      "unitGroups": [
-        {
-          "idx": 0,
-          "seconds": 0,
-          "times": 1000,
-          "units": [
-            {
-              "name": "echohello",
-              "parallel": 10,
-              "limit": 0,
-              "success": 990,
-              "total": 990,
-              "qps": 304.70342046517436,
-              "code": {},
-              "elapse": 31743496,
-              "rate": 1.0,
-              "resTime": 104178,
-              "startTime": "2022-04-09T21:09:29.590872",
-              "endTime": "2022-04-09T21:09:32.839933",
-              "isErr": False,
-              "err": ""
-            }
-          ]
-        },
-        {
-          "idx": 1,
-          "seconds": 2,
-          "times": 0,
-          "units": [
-            {
-              "name": "echohello",
-              "parallel": 10,
-              "limit": 0,
-              "success": 624,
-              "total": 624,
-              "qps": 321.5424142270151,
-              "code": {},
-              "elapse": 18906149,
-              "rate": 1.0,
-              "resTime": 58798,
-              "startTime": "2022-04-09T21:09:32.905648",
-              "endTime": "2022-04-09T21:09:34.846294",
-              "isErr": False,
-              "err": ""
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
