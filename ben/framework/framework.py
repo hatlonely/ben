@@ -135,7 +135,8 @@ class Framework:
         )
 
     def format(self):
-        pass
+        res = TestResult.from_json(json.load(open(self.json_result)))
+        print(self.reporter.report(res))
 
     def run(self):
         context = RuntimeContext(

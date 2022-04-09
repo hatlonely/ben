@@ -25,6 +25,10 @@ def main():
     parser.add_argument("-t", "--test", help="test root directory")
     parser.add_argument("-p", "--plan", help="test plan directory")
     parser.add_argument("--json-result", help="json result report. If you specify this field, you can convert the JSON report to another format report")
+    parser.add_argument("--hook", help="runtime hook. Separated by comma. Built in support of `debug/report/slsLog/stdLog/email/dingTalk`. Support user defined extension in `x`")
+    parser.add_argument("--lang", help="report language. Built in support of `zh|en`")
+    parser.add_argument("-x", "--x", help="user defined extension directory. Support to expand drivers/reporters/hooks/util-functions")
+    parser.add_argument("--customize", help="customize filename")
 
     args = parser.parse_args()
 
@@ -32,6 +36,10 @@ def main():
         test_directory=args.test,
         plan_directory=args.plan,
         reporter=args.reporter,
+        hook=args.hook,
+        lang=args.lang,
+        x=args.x,
+        customize=args.customize,
     )
 
     if args.json_result:
