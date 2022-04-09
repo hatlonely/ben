@@ -22,7 +22,7 @@ from ..seed import seed_map, Seed
 from ..driver import Driver, driver_map
 from ..reporter import reporter_map
 from ..hook import Hook, hook_map
-from ..result import TestResult, PlanResult, UnitResult, StepResult, SubStepResult
+from ..result import TestResult, PlanResult, UnitGroup, UnitResult, StepResult, SubStepResult
 from .stop import Stop
 
 
@@ -251,19 +251,31 @@ class Framework:
         plan_info
     ):
         plan_info = merge(plan_info, {
-            "stop": {
+            "group": [{
                 "seconds": 3,
-                "times": 0
-            },
+                "times": 0,
+            }],
             "unit": []
         })
 
-        stop = Stop(plan_info["stop"])
         plan_result = PlanResult(plan_info["planID"], plan_info["name"])
-        pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
-        results = pool.map(Framework.must_run_unit, repeat(customize), repeat(constant), repeat(context), repeat(stop), [i for i in plan_info["unit"]])
-        for result in results:
-            plan_result.add_unit_result(result)
+        for group in plan_info["group"]:
+            stop = Stop(group)
+            pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
+            results = pool.map(
+                Framework.must_run_unit,
+                repeat(customize),
+                repeat(constant),
+                repeat(context),
+                repeat(stop),
+                repeat(1) if "parallel" not in group else [i for i in group["parallel"]],
+                repeat(0) if "limit" not in group else [i for i in group["limit"]],
+                [i for i in plan_info["unit"]],
+            )
+            unit_group = UnitGroup()
+            for result in results:
+                unit_group.add_unit_result(result)
+            plan_result.add_unit_group(unit_group)
         return plan_result
 
     @staticmethod
@@ -272,6 +284,8 @@ class Framework:
         constant: RuntimeConstant,
         context: RuntimeContext,
         stop: Stop,
+        parallel,
+        limit,
         unit_info,
     ):
         unit_info = merge(unit_info, {"name": "unit"})
@@ -280,9 +294,9 @@ class Framework:
             hook.on_unit_start(unit_info)
 
         try:
-            result = Framework.run_unit(customize, constant, context, stop, unit_info)
+            result = Framework.run_unit(customize, constant, context, stop, parallel, limit, unit_info)
         except Exception as e:
-            result = UnitResult(unit_info["name"], err_message="Exception {}".format(traceback.format_exc()))
+            result = UnitResult(unit_info["name"], parallel, limit, err_message="Exception {}".format(traceback.format_exc()))
 
         for hook in constant.hooks:
             hook.on_unit_end(result)
@@ -294,18 +308,18 @@ class Framework:
         constant: RuntimeConstant,
         context: RuntimeContext,
         stop: Stop,
+        parallel,
+        limit,
         unit_info,
     ):
         unit_info = merge(unit_info, {
-            "parallel": 1,
-            "qps": 0,
             "seed": {},
             "step": [],
         })
 
-        q = queue.Queue(maxsize=unit_info["parallel"])
-        pool = concurrent.futures.ThreadPoolExecutor(max_workers=unit_info["parallel"])
-        for i in range(unit_info["parallel"]):
+        q = queue.Queue(maxsize=parallel)
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=parallel)
+        for i in range(parallel):
             pool.submit(
                 Framework.must_run_step,
                 customize,
@@ -316,7 +330,7 @@ class Framework:
                 unit_info["step"],
                 q,
             )
-        unit_result = UnitResult(name=unit_info["name"])
+        unit_result = UnitResult(unit_info["name"], parallel, limit)
         while stop.is_running() or not q.empty():
             step_result = q.get()
             unit_result.add_step_result(step_result)

@@ -96,6 +96,8 @@ class StepResult:
 @dataclass
 class UnitResult:
     name: str
+    parallel: int
+    limit: int
     success: int
     total: int
     qps: float
@@ -111,6 +113,9 @@ class UnitResult:
 
     def to_json(self):
         return {
+            "name": self.name,
+            "parallel": self.parallel,
+            "limit": self.limit,
             "success": self.success,
             "total": self.total,
             "qps": self.qps,
@@ -126,7 +131,7 @@ class UnitResult:
 
     @staticmethod
     def from_json(obj):
-        res = UnitResult(name=obj["name"])
+        res = UnitResult(obj["name"], obj["parallel"], obj["limit"])
         res.success = obj["success"]
         res.total = obj["total"]
         res.qps = obj["qps"]
@@ -140,8 +145,10 @@ class UnitResult:
         res.err = obj["err"]
         return res
 
-    def __init__(self, name, err_message=None):
+    def __init__(self, name, parallel, limit, err_message=None):
         self.name = name
+        self.parallel = parallel
+        self.limit = limit
         self.success = 0
         self.total = 0
         self.qps = 0
@@ -177,12 +184,40 @@ class UnitResult:
 
 
 @dataclass
+class UnitGroup:
+    idx = 0
+    seconds = 0
+    times = 0
+    units = list[UnitResult]()
+
+    def to_json(self):
+        return {
+            "idx": self.idx,
+            "seconds": self.seconds,
+            "times": self.times,
+            "units": self.units,
+        }
+
+    @staticmethod
+    def from_json(obj):
+        res = UnitGroup()
+        res.idx = obj["idx"]
+        res.seconds = obj["seconds"]
+        res.times = obj["times"]
+        res.units = [UnitResult.from_json(i) for i in obj["units"]]
+        return res
+
+    def add_unit_result(self, unit):
+        self.units.append(unit)
+
+
+@dataclass
 class PlanResult:
     id_: str
     name: str
     is_err: bool
     err: str
-    units: list[UnitResult]
+    unit_groups: list[UnitGroup]
 
     def to_json(self):
         return {
@@ -190,7 +225,7 @@ class PlanResult:
             "name": self.name,
             "isErr": self.is_err,
             "err": self.err,
-            "units": self.units
+            "unitGroups": self.unit_groups
         }
 
     @staticmethod
@@ -198,20 +233,20 @@ class PlanResult:
         res = PlanResult(obj["id"], obj["name"])
         res.is_err = obj["isErr"]
         res.err = obj["err"]
-        res.units = [UnitResult.from_json(i) for i in obj["units"]]
+        res.unit_groups = [UnitGroup.from_json(i) for i in obj["unitGroups"]]
 
     def __init__(self, id_, name, err_message=None):
         self.id_ = id_
         self.name = name
-        self.units = []
+        self.unit_groups = []
         self.is_err = False
         self.err = ""
         if err_message:
             self.is_err = True
             self.err = err_message
 
-    def add_unit_result(self, unit):
-        self.units.append(unit)
+    def add_unit_group(self, unit_group):
+        self.unit_groups.append(unit_group)
 
 
 @dataclass
