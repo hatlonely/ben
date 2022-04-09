@@ -51,8 +51,7 @@ class TextReporter(Reporter):
 
     def _format_unit_group(self, res: UnitGroup):
         lines = [
-            "{}{i18n.title.unitGroup} "
-            "{i18n.title.idx}: {res.idx}, "
+            "{}{i18n.title.unitGroup} {res.idx} "
             "{i18n.title.seconds}: {res.seconds}, "
             "{i18n.title.times}: {res.times}".format(self.padding, res=res, i18n=self.i18n)
         ]
