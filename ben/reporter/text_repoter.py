@@ -77,7 +77,6 @@ class TextReporter(Reporter):
             )
         ]
         if res.code:
-            print(res.code)
             lines.extend([
                 self.padding * 2 + line
                 for line in "{i18n.title.code}: {code}".format(
