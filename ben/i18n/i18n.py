@@ -11,11 +11,21 @@ from ..util import merge
 
 i18n = {
     "dft": {
-
+        "title": {
+            "test": "TEST",
+            "plan": "PLAN",
+            "unit": "UNIT",
+            "step": "STEP",
+        },
     },
     "en": {},
     "zh": {
-
+        "title": {
+            "test": "测试",
+            "plan": "计划",
+            "unit": "单元",
+            "step": "步骤",
+        }
     }
 }
 
