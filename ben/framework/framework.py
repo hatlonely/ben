@@ -251,15 +251,16 @@ class Framework:
         plan_info
     ):
         plan_info = merge(plan_info, {
-            "group": [{
-                "seconds": 3,
-                "times": 0,
-            }],
+            "group": [],
             "unit": []
         })
 
         plan_result = PlanResult(plan_info["planID"], plan_info["name"])
-        for group in plan_info["group"]:
+        for idx, group in enumerate(plan_info["group"]):
+            group = merge(group, {
+                "seconds": 0,
+                "times": 0,
+            })
             stop = Stop(group)
             pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
             results = pool.map(
@@ -272,7 +273,7 @@ class Framework:
                 repeat(0) if "limit" not in group else [i for i in group["limit"]],
                 [i for i in plan_info["unit"]],
             )
-            unit_group = UnitGroup()
+            unit_group = UnitGroup(idx, group["seconds"], group["times"])
             for result in results:
                 unit_group.add_unit_result(result)
             plan_result.add_unit_group(unit_group)

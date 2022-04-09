@@ -26,7 +26,8 @@ plan:
       - seconds: 2
         parallel: [10]
     unit:
-      - seed:
+      - name: echohello
+        seed:
           req: seed1
         step:
           - ctx: sh

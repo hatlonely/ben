@@ -185,10 +185,10 @@ class UnitResult:
 
 @dataclass
 class UnitGroup:
-    idx = 0
-    seconds = 0
-    times = 0
-    units = list[UnitResult]()
+    idx: int
+    seconds: int
+    times: int
+    units: list[UnitResult]
 
     def to_json(self):
         return {
@@ -206,6 +206,12 @@ class UnitGroup:
         res.times = obj["times"]
         res.units = [UnitResult.from_json(i) for i in obj["units"]]
         return res
+
+    def __init__(self, idx, seconds, times):
+        self.idx = idx
+        self.seconds = seconds
+        self.times = times
+        self.units = list[UnitResult]()
 
     def add_unit_result(self, unit):
         self.units.append(unit)
