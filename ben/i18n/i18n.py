@@ -20,9 +20,9 @@ i18n = {
             "err": "Err",
             "idx": "Index",
             "seconds": "Seconds",
-            "times": "times",
-            "parallel": "parallel",
-            "limit": "limit",
+            "times": "Times",
+            "parallel": "Parallel",
+            "limit": "Limit",
             "success": "Success",
             "total": "Total",
             "elapse": "Elapse",
@@ -31,6 +31,10 @@ i18n = {
             "qps": "QPS",
             "code": "Code",
         },
+        "status": {
+            "fail": "FAIL",
+            "succ": "SUCCESS",
+        }
     },
     "en": {},
     "zh": {
@@ -53,6 +57,10 @@ i18n = {
             "resTime": "响应时间",
             "qps": "QPS",
             "code": "错误码",
+        },
+        "status": {
+            "fail": "失败",
+            "succ": "成功",
         }
     }
 }

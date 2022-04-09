@@ -15,7 +15,7 @@ from ..result import TestResult
 _report_tpl = """<!DOCTYPE html>
 <html lang="zh-cmn-Hans">
 <head>
-    <title>{{ res.name }} {{ i18n.title.report }}</title>
+    <title>{{ test.name }} {{ i18n.title.report }}</title>
     <meta charset="UTF-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
@@ -39,7 +39,7 @@ _report_tpl = """<!DOCTYPE html>
     <div class="container">
         <div class="row justify-content-md-center">
             <div class="col-lg-10 col-md-12">
-            {{ render_test(res, "test") }}
+            {{ render_test(test, "test") }}
             </div>
         </div>
     </div>
@@ -55,14 +55,126 @@ _report_tpl = """<!DOCTYPE html>
 """
 
 _test_tpl = """
+<div class="col-md-12" id={{ name }}>
+    {% if test.is_err %}
+    <div class="card my-{{ customize.padding.y }} border-danger">
+        <h5 class="card-header text-white bg-danger">{{ i18n.title.test }} {{ test.name }} {{ i18n.status.fail }}</h5>
+    {% else %}
+    <div class="card my-{{ customize.padding.y }} border-success">
+        <h5 class="card-header text-white bg-success">{{ i18n.title.test }} {{ test.name }} {{ i18n.status.succ }}</h5>
+    {% endif %}
 
+        {# render err #}
+        {% if test.is_err %}
+        <div class="card-header text-white bg-danger"><span class="fw-bolder">{{ i18n.test.err }}</span></div>
+        <div class="card-body"><pre>{{ test.err }}</pre></div>
+        {% endif %}
+
+        {# render description #}
+        {% if test.description %}
+        <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.testHeader.description }}</span></div>
+        <div class="card-body">{{ markdown(test.description) }}</div>
+        {% endif %}
+
+        {# render plan #}
+        {% if test.plans %}
+        <div class="card-header justify-content-between d-flex">
+            <span class="fw-bolder">{{ i18n.title.plan }}</span>
+        </div>
+        <ul class="list-group list-group-flush" id="{{ name }}-plan">
+            {% for plan in test.plans %}
+            <li class="list-group-item px-{{ customize.padding.x }} py-{{ customize.padding.y }} plan">
+                {{ render_plan(plan, '{}-plan-{}'.format(name, loop.index0)) }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
 """
 
 _plan_tpl = """
-
+<a class="card-title btn d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#{{ name }}" role="button" aria-expanded="false" aria-controls="{{ name }}">
+    {{ plan.name }}
+</a>
+<div class="collapse card" id="{{ name }}">
+    {% if plan.is_err %}
+    <div class="card border-danger">
+    {% else %}
+    <div class="card border-success">
+    {% endif %}
+    
+        {# Description #}
+        {% if plan.description %}
+        <div class="card-header"><span class="fw-bolder">{{ i18n.title.description }}</span></div>
+        <div class="card-body">{{ markdown(plan.description) }}</div>
+        {% endif %}
+    
+        {# Command #}
+        {% if plan.command %}
+        <div class="card-header"><span class="fw-bolder">{{ i18n.title.command }}</span></div>
+        <div class="card-body">
+            <div class="float-end">
+                <button type="button" class="btn btn-sm py-0" onclick="copyToClipboard('{{ name }}-command')"
+                    data-bs-toggle="tooltip" data-bs-placement="top" title="{{ i18n.toolTips.copy }}">
+                    <i class="bi-clipboard"></i>
+                </button>
+            </div>
+            <span id="{{ name }}-command">{{ plan.command }}</span>
+        </div>
+        {% endif %}
+    
+        {# UnitGroup #}
+        {% if plan.unit_groups %}
+        <ul class="list-group list-group-flush">
+            {% for unit_group in plan.unit_groups %}
+            <li class="list-group-item px-{{ customize.padding.x }} py-{{ customize.padding.y }}">
+                {{ render_unit_group(unit_group, '{}-group-{}'.format(name, loop.index0)) }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
 """
 
 _unit_group_tpl = """
+<div class="card" id="{{ name }}">
+    {% if group.is_err %}<div class="card border-danger">{% else %}<div class="card border-success">{% endif %}
+
+    <table class="table table-striped">
+        <thead>
+            <tr class="text-center">
+                <th>{{ i18n.title.seconds }}</th>
+                <th>{{ i18n.title.times }}</th>
+                <th>{{ i18n.title.unit }}</th>
+                <th>{{ i18n.title.parallel }}</th>
+                <th>{{ i18n.title.limit }}</th>
+                <th>{{ i18n.title.total }}</th>
+                <th>{{ i18n.title.rate }}</th>
+                <th>{{ i18n.title.qps }}</th>
+                <th>{{ i18n.title.resTime }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for unit in group.units %}
+            <tr class="text-center">
+                <td>{{ group.seconds }}</td>
+                <td>{{ group.times }}</td>
+                <td>{{ unit.name }}</td>
+                <td>{{ unit.parallel }}</td>
+                <td>{{ unit.limit }}</td>
+                <td>{{ unit.total }}</td>
+                <td>{{ int(unit.rate * 10000) / 100 }}%</td>
+                <td>{{ int(unit.qps) }}</td>
+                <td>{{ format_timedelta(unit.res_time) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    </div>
+</div>
 """
 
 _unit_tpl = """
@@ -98,7 +210,7 @@ class HtmlReporter(Reporter):
 
         env = Environment(loader=BaseLoader())
         env.globals.update(format_timedelta=HtmlReporter.format_timedelta)
-        env.globals.update(json=json)
+        env.globals.update(json=json, int=int)
         env.globals.update(render_test=self.render_test)
         env.globals.update(render_plan=self.render_plan)
         env.globals.update(render_unit_group=self.render_unit_group)
@@ -129,4 +241,6 @@ class HtmlReporter(Reporter):
 
     @staticmethod
     def format_timedelta(t: datetime.timedelta):
-        return "{:.3f}s".format(t.total_seconds())
+        if t >= datetime.timedelta(seconds=1):
+            return "{:.3f}s".format(t.total_seconds())
+        return "{:.3f}ms".format(t.total_seconds()*1000)

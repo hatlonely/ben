@@ -22,7 +22,7 @@ plan:
   - name: ben1
     group:
       - times: 1000
-        parallel: [10, 10]
+        parallel: [5, 5]
       - seconds: 2
         parallel: [10, 10]
     unit:
