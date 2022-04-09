@@ -20,7 +20,7 @@ from itertools import repeat
 from ..seed import seed_map, Seed
 from ..util import merge, REQUIRED, render
 from ..driver import Driver, driver_map
-from ..reporter import Reporter, reporter_map
+from ..reporter import reporter_map
 from ..result import TestResult, PlanResult, UnitResult, StepResult, SubStepResult
 from .stop import Stop
 
