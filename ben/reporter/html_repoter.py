@@ -21,6 +21,8 @@ _report_tpl = """<!DOCTYPE html>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js" integrity="sha256-7rldQObjnoCubPizkatB4UZ0sCQzu2ePgyGSUcVN70E=" crossorigin="anonymous"></script>
+
     {{ customize.font.style }}
     <style>
         body {
@@ -174,10 +176,47 @@ _unit_group_tpl = """
             </tbody>
         </table>
     </div>
-</div>
-"""
 
-_unit_tpl = """
+    {# Code #}
+    <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.code }}</span></div>
+    <div class="card-body">
+        {% for unit in group.units %}
+        {% if unit.code %}
+        <div id="{{ '{}-unit-{}'.format(name, loop.index0) }}" style="width: 300px;height:300px;"></div>
+        <script>
+            echarts.init(document.getElementById("{{ '{}-unit-{}'.format(name, loop.index0) }}")).setOption({
+              tooltip: {
+                trigger: "item"
+              },
+              series: [
+                {
+                  name: "{{ unit.name }}",
+                  type: "pie",
+                  radius: ['40%', '70%'],
+                  avoidLabelOverlap: false,
+                  label: {
+                    show: false,
+                    position: 'center'
+                  },
+                  emphasis: {
+                    label: {
+                      show: true,
+                      fontSize: '20',
+                      fontWeight: 'bold'
+                    }
+                  },
+                  labelLine: {
+                    show: false
+                  },
+                  data: {{ json.dumps(dict_to_items(unit.code)) }}
+                }
+              ]
+            });
+        </script>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
 """
 
 
@@ -210,11 +249,11 @@ class HtmlReporter(Reporter):
 
         env = Environment(loader=BaseLoader())
         env.globals.update(format_timedelta=HtmlReporter.format_timedelta)
-        env.globals.update(json=json, int=int)
+        env.globals.update(dict_to_items=HtmlReporter.dict_to_items)
+        env.globals.update(json=json, int=int, list=list)
         env.globals.update(render_test=self.render_test)
         env.globals.update(render_plan=self.render_plan)
         env.globals.update(render_unit_group=self.render_unit_group)
-        env.globals.update(render_unit=self.render_unit)
         env.globals.update(markdown=markdown.markdown)
         env.globals.update(i18n=self.i18n)
         env.globals.update(customize=self.customize)
@@ -222,7 +261,6 @@ class HtmlReporter(Reporter):
         self.test_tpl = env.from_string(_test_tpl)
         self.plan_tpl = env.from_string(_plan_tpl)
         self.unit_group_tpl = env.from_string(_unit_group_tpl)
-        self.unit_tpl = env.from_string(_unit_tpl)
 
     def report(self, test: TestResult) -> str:
         return self.report_tpl.render(test=test)
@@ -236,11 +274,12 @@ class HtmlReporter(Reporter):
     def render_unit_group(self, unit_group, name):
         return self.unit_group_tpl.render(group=unit_group, name=name)
 
-    def render_unit(self, unit, name):
-        return self.unit_tpl.render(unit=unit, name=name)
-
     @staticmethod
     def format_timedelta(t: datetime.timedelta):
         if t >= datetime.timedelta(seconds=1):
             return "{:.3f}s".format(t.total_seconds())
         return "{:.3f}ms".format(t.total_seconds()*1000)
+
+    @staticmethod
+    def dict_to_items(d: dict):
+        return list([({"name": k, "value": v}) for k, v in d.items()])
