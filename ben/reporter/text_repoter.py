@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import json
+
 import durationpy
 
 from .reporter import Reporter
@@ -74,4 +76,13 @@ class TextReporter(Reporter):
                 rate=int(res.rate * 10000) / 100.0
             )
         ]
+        if res.code:
+            print(res.code)
+            lines.extend([
+                self.padding * 2 + line
+                for line in "{i18n.title.code}: {code}".format(
+                    i18n=self.i18n,
+                    code=json.dumps(res.code, indent=2)
+                ).split("\n")
+            ])
         return lines

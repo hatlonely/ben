@@ -22,11 +22,11 @@ plan:
   - name: ben1
     group:
       - times: 1000
-        parallel: [10]
+        parallel: [10, 10]
       - seconds: 2
-        parallel: [10]
+        parallel: [10, 10]
     unit:
-      - name: echohello
+      - name: echohello1
         seed:
           req: seed1
         step:
@@ -38,4 +38,14 @@ plan:
                 "#KEY2": seed["req"]["key2"]
             res:
               "#groupby": res["exitCode"]
+              success: 0
+      - name: echohello2
+        seed:
+          req: seed1
+        step:
+          - ctx: sh
+            req:
+              command: date +%s
+            res:
+              "#groupby": "int(res['stdout']) % 3"
               success: 0

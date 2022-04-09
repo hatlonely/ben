@@ -29,6 +29,7 @@ i18n = {
             "rate": "Rate",
             "resTime": "ResTime",
             "qps": "QPS",
+            "code": "Code",
         },
     },
     "en": {},
@@ -51,6 +52,7 @@ i18n = {
             "rate": "成功率",
             "resTime": "响应时间",
             "qps": "QPS",
+            "code": "错误码",
         }
     }
 }
