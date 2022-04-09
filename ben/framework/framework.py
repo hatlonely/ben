@@ -298,7 +298,7 @@ class Framework:
             "parallel": 1,
             "qps": 0,
             "seed": {},
-            "step": REQUIRED,
+            "step": [],
         })
 
         q = queue.Queue(maxsize=unit_info["parallel"])
