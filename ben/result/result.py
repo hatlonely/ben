@@ -236,6 +236,8 @@ class UnitResult:
             self.err = err_message
         self.stages = list[UnitStageResult]()
         self.stage_milliseconds = stage_seconds * 1000 // stage_number
+        if self.stage_milliseconds < 100:
+            self.stage_milliseconds = 100
         self.stage_times = stage_times // stage_number
         self.current_stage = UnitStageResult()
 
