@@ -301,6 +301,7 @@ class UnitGroup:
     seconds: int
     times: int
     units: list[UnitResult]
+    quantile: list
 
     def to_json(self):
         return {
@@ -308,18 +309,22 @@ class UnitGroup:
             "seconds": self.seconds,
             "times": self.times,
             "units": self.units,
+            "quantile": self.quantile
         }
 
     @staticmethod
     def from_json(obj):
-        res = UnitGroup(obj["idx"], obj["seconds"], obj["times"])
+        res = UnitGroup(obj["idx"], obj["seconds"], obj["times"], quantile=obj["quantile"])
         res.idx = obj["idx"]
         res.seconds = obj["seconds"]
         res.times = obj["times"]
         res.units = [UnitResult.from_json(i) for i in obj["units"]]
         return res
 
-    def __init__(self, idx, seconds, times):
+    def __init__(self, idx, seconds, times, quantile=None):
+        self.quantile = quantile
+        if self.quantile is None:
+            self.quantile = [80, 90, 95, 99, 99.9]
         self.idx = idx
         self.seconds = seconds
         self.times = times

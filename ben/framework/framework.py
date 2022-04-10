@@ -260,6 +260,7 @@ class Framework:
             group = merge(group, {
                 "seconds": 0,
                 "times": 0,
+                "quantile": [80, 90, 95, 99, 99.9],
             })
             stop = Stop(group)
             pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
@@ -269,11 +270,12 @@ class Framework:
                 repeat(constant),
                 repeat(context),
                 repeat(stop),
+                repeat(group["quantile"]),
                 repeat(1) if "parallel" not in group else [i for i in group["parallel"]],
                 repeat(0) if "limit" not in group else [i for i in group["limit"]],
                 [i for i in plan_info["unit"]],
             )
-            unit_group = UnitGroup(idx, group["seconds"], group["times"])
+            unit_group = UnitGroup(idx, group["seconds"], group["times"], quantile=group["quantile"])
             for result in results:
                 unit_group.add_unit_result(result)
             plan_result.add_unit_group(unit_group)
@@ -285,6 +287,7 @@ class Framework:
         constant: RuntimeConstant,
         context: RuntimeContext,
         stop: Stop,
+        quantile: list,
         parallel,
         limit,
         unit_info,
@@ -295,7 +298,7 @@ class Framework:
             hook.on_unit_start(unit_info)
 
         try:
-            result = Framework.run_unit(customize, constant, context, stop, parallel, limit, unit_info)
+            result = Framework.run_unit(customize, constant, context, stop, quantile, parallel, limit, unit_info)
         except Exception as e:
             result = UnitResult(unit_info["name"], parallel, limit, err_message="Exception {}".format(traceback.format_exc()))
 
@@ -309,6 +312,7 @@ class Framework:
         constant: RuntimeConstant,
         context: RuntimeContext,
         stop: Stop,
+        quantile: list,
         parallel,
         limit,
         unit_info,
@@ -334,6 +338,7 @@ class Framework:
         unit_result = UnitResult(
             unit_info["name"], parallel, limit,
             stage_seconds=stop.seconds, stage_times=stop.times,
+            quantile=quantile,
         )
         while stop.is_running() or not q.empty():
             step_result = q.get()

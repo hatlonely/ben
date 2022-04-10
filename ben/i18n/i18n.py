@@ -31,6 +31,7 @@ i18n = {
             "qps": "QPS",
             "code": "Code",
             "summary": "Summary",
+            "quantile": "Quantile",
         },
         "status": {
             "fail": "FAIL",
@@ -62,6 +63,7 @@ i18n = {
             "qps": "QPS",
             "code": "错误码",
             "summary": "汇总",
+            "quantile": "分位数",
         },
         "status": {
             "fail": "失败",
