@@ -331,7 +331,10 @@ class Framework:
                 unit_info["step"],
                 q,
             )
-        unit_result = UnitResult(unit_info["name"], parallel, limit)
+        unit_result = UnitResult(
+            unit_info["name"], parallel, limit,
+            stage_seconds=stop.seconds, stage_times=stop.times,
+        )
         while stop.is_running() or not q.empty():
             step_result = q.get()
             unit_result.add_step_result(step_result)
