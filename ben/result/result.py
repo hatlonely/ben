@@ -291,7 +291,7 @@ class UnitResult:
         self.code["OK"] = self.success
 
         self.steps.sort(key=lambda x: x.elapse)
-        self.quantile = dict([(k, self.steps[int(len(self.steps) * k // 100)].elapse) for k in self.quantile_keys])
+        self.quantile = dict([(str(k), self.steps[int(len(self.steps) * k // 100)].elapse) for k in self.quantile_keys])
 
         self.current_stage.summary()
         self.stages.append(self.current_stage)
@@ -327,6 +327,7 @@ class UnitGroup:
         self.quantile = quantile
         if self.quantile is None:
             self.quantile = [80, 90, 95, 99, 99.9]
+        self.quantile = list([str(i) for i in self.quantile])
         self.idx = idx
         self.seconds = seconds
         self.times = times

@@ -182,7 +182,7 @@ _unit_group_tpl = """
                     <td>{{ int(unit.qps) }}</td>
                     <td>{{ format_timedelta(unit.res_time) }}</td>
                     {% for q in group.quantile %}
-                    <td>{{ format_timedelta(unit.quantile["80"]) }}</td>
+                    <td>{{ format_timedelta(unit.quantile[q]) }}</td>
                     {% endfor %}
                 </tr>
                 {% endfor %}
