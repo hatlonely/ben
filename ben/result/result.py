@@ -214,8 +214,11 @@ class UnitResult:
 
     def __init__(
         self, name, parallel, limit, err_message=None,
-        stage_seconds=0, stage_times=0, stage_number=100
+        stage_seconds=0, stage_times=0, stage_number=100,
+        quantile=None,
     ):
+        if quantile is None:
+            quantile = [80, 90, 95, 99, 99.9]
         self.name = name
         self.parallel = parallel
         self.limit = limit
