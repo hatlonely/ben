@@ -180,7 +180,7 @@ _unit_group_tpl = """
     {# Code #}
     <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.code }}</span></div>
     <div class="card-body d-flex justify-content-center">
-        <div id="{{ '{}-unit-code'.format(name) }}" style="height:300px;"></div>
+        <div  class="col-md-12" id="{{ '{}-unit-code'.format(name) }}" style="height: 300px;"></div>
         <script>
             $("#{{ '{}-unit-code'.format(name) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
             echarts.init(document.getElementById("{{ '{}-unit-code'.format(name) }}")).setOption({
@@ -226,7 +226,7 @@ _unit_group_tpl = """
     {# QPS #}
     <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.qps }}</span></div>
     <div class="card-body d-flex justify-content-center">
-        <div class="col-md-10 chart" id="{{ '{}-unit-qps'.format(name) }}" style="height: 300px;"></div>
+        <div class="col-md-12" id="{{ '{}-unit-qps'.format(name) }}" style="height: 300px;"></div>
         <script>
             $("#{{ '{}-unit-qps'.format(name) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
             echarts.init(document.getElementById("{{ '{}-unit-qps'.format(name) }}")).setOption({
@@ -267,6 +267,49 @@ _unit_group_tpl = """
         </script>
     </div>
 
+    {# Rate #}
+    <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.rate }}</span></div>
+    <div class="card-body d-flex justify-content-center">
+        <div class="col-md-12" id="{{ '{}-unit-rate'.format(name) }}" style="height: 300px;"></div>
+        <script>
+            $("#{{ '{}-unit-rate'.format(name) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
+            echarts.init(document.getElementById("{{ '{}-unit-rate'.format(name) }}")).setOption({
+              tooltip: {
+                trigger: 'axis',
+                position: function (pt) {
+                  return [pt[0], '10%'];
+                }
+              },
+              toolbox: {
+                feature: {
+                  saveAsImage: {
+                    title: "{{ i18n.tooltip.save }}"
+                  }
+                }
+              },
+              xAxis: {
+                type: "time",
+                boundaryGap: false
+              },
+              yAxis: {
+                type: "value",
+                boundaryGap: [0, '100%']
+              },
+              series: [
+                {% for unit in group.units %}
+                {
+                  name: "{{ unit.name }}",
+                  type: "line",
+                  smooth: true,
+                  symbol: "none",
+                  areaStyle: {},
+                  data: {{ json.dumps(unit_stage_serial(unit, "rate")) }}
+                },
+                {% endfor %}
+              ]
+            });
+        </script>
+    </div>
 </div>
 """
 
