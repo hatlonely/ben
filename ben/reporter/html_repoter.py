@@ -7,9 +7,9 @@ from jinja2 import Environment, BaseLoader
 import markdown
 from types import SimpleNamespace
 
-from ..util import merge, REQUIRED
+from ..util import merge
 from .reporter import Reporter
-from ..result import TestResult
+from ..result import TestResult, UnitResult
 
 
 _report_tpl = """<!DOCTYPE html>
@@ -230,38 +230,39 @@ _unit_group_tpl = """
         <script>
             $("#{{ '{}-unit-qps'.format(name) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
             echarts.init(document.getElementById("{{ '{}-unit-qps'.format(name) }}")).setOption({
-                toolbox: {
-                  feature: {
-                    saveAsImage: {
-                      title: "{{ i18n.tooltip.save }}"
-                    }
+              tooltip: {
+                trigger: 'axis',
+                position: function (pt) {
+                  return [pt[0], '10%'];
+                }
+              },
+              toolbox: {
+                feature: {
+                  saveAsImage: {
+                    title: "{{ i18n.tooltip.save }}"
                   }
+                }
+              },
+              xAxis: {
+                type: "time",
+                boundaryGap: false
+              },
+              yAxis: {
+                type: "value",
+                boundaryGap: [0, '100%']
+              },
+              series: [
+                {% for unit in group.units %}
+                {
+                  name: "{{ unit.name }}",
+                  type: "line",
+                  smooth: true,
+                  symbol: "none",
+                  areaStyle: {},
+                  data: {{ json.dumps(unit_stage_serial(unit, "qps")) }}
                 },
-                xAxis: {
-                  type: 'time',
-                  boundaryGap: false
-                },
-                yAxis: {
-                  type: 'value',
-                  boundaryGap: [0, '100%']
-                },
-                series: [
-                  {
-                    name: 'Fake Data',
-                    type: 'line',
-                    smooth: true,
-                    symbol: 'none',
-                    areaStyle: {},
-                    data: [
-                        ["2022-04-10T18:02:56.101046", 138.8566818529591],
-["2022-04-10T18:02:56.821249", 126.33025761266133],
-["2022-04-10T18:02:57.612836", 143.75354891573886],
-["2022-04-10T18:02:58.308507", 134.7750671516772],
-["2022-04-10T18:02:59.050614", 136.42546190250764],
-["2022-04-10T18:02:59.783627", 70.52434853133045],
-                    ]
-                  }
-                ]
+                {% endfor %}
+              ]
             });
         </script>
     </div>
@@ -300,6 +301,7 @@ class HtmlReporter(Reporter):
         env = Environment(loader=BaseLoader())
         env.globals.update(format_timedelta=HtmlReporter.format_timedelta)
         env.globals.update(dict_to_items=HtmlReporter.dict_to_items)
+        env.globals.update(unit_stage_serial=HtmlReporter.unit_stage_serial)
         env.globals.update(json=json, int=int, list=list)
         env.globals.update(render_test=self.render_test)
         env.globals.update(render_plan=self.render_plan)
@@ -337,3 +339,10 @@ class HtmlReporter(Reporter):
     @staticmethod
     def dict_to_items(d: dict):
         return list([({"name": k, "value": v}) for k, v in d.items()])
+
+    @staticmethod
+    def unit_stage_serial(unit: UnitResult, serial):
+        return list([
+            [stage.time.isoformat(), getattr(stage, serial)]
+            for stage in unit.stages
+        ])

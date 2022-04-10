@@ -21,9 +21,9 @@ seed:
 plan:
   - name: BenchmarkEmpty
     group:
-      - times: 1000
+      - times: 20000
         parallel: [5, 5]
-      - seconds: 2
+      - seconds: 20
         parallel: [10, 10]
     unit:
       - name: empty1
@@ -34,9 +34,9 @@ plan:
           req: seed1
   - name: BenchmarkShell
     group:
-      - times: 1000
+      - times: 20000
         parallel: [5, 5]
-      - seconds: 2
+      - seconds: 20
         parallel: [10, 10]
     unit:
       - name: echohello1

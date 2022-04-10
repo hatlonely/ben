@@ -214,7 +214,7 @@ class UnitResult:
 
     def __init__(
         self, name, parallel, limit, err_message=None,
-        stage_seconds=0, stage_times=0, stage_number=10
+        stage_seconds=0, stage_times=0, stage_number=100
     ):
         self.name = name
         self.parallel = parallel
