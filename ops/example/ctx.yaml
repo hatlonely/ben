@@ -19,7 +19,20 @@ seed:
           key2: val22
 
 plan:
-  - name: Benchmark1
+  - name: BenchmarkEmpty
+    group:
+      - times: 1000
+        parallel: [5, 5]
+      - seconds: 2
+        parallel: [10, 10]
+    unit:
+      - name: empty1
+        seed:
+          req: seed1
+      - name: empty2
+        seed:
+          req: seed1
+  - name: BenchmarkShell
     group:
       - times: 1000
         parallel: [5, 5]

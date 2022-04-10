@@ -278,7 +278,11 @@ class HtmlReporter(Reporter):
     def format_timedelta(t: datetime.timedelta):
         if t >= datetime.timedelta(seconds=1):
             return "{:.3f}s".format(t.total_seconds())
-        return "{:.3f}ms".format(t.total_seconds()*1000)
+        if t >= datetime.timedelta(milliseconds=1):
+            return "{:.3f}ms".format(t.total_seconds()*1000)
+        if t >= datetime.timedelta(microseconds=1):
+            return "{:.3f}us".format(t.total_seconds()*1000000)
+        return "{:.3f}ns".format(t.total_seconds()*1000000000)
 
     @staticmethod
     def dict_to_items(d: dict):
