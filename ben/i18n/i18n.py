@@ -30,6 +30,7 @@ i18n = {
             "resTime": "ResTime",
             "qps": "QPS",
             "code": "Code",
+            "summary": "Summary",
         },
         "status": {
             "fail": "FAIL",
@@ -60,6 +61,7 @@ i18n = {
             "resTime": "响应时间",
             "qps": "QPS",
             "code": "错误码",
+            "summary": "汇总",
         },
         "status": {
             "fail": "失败",

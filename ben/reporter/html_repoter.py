@@ -144,12 +144,21 @@ _unit_group_tpl = """
 <div class="card" id="{{ name }}">
     {% if group.is_err %}<div class="card border-danger">{% else %}<div class="card border-success">{% endif %}
 
+    <div class="card-header justify-content-between d-flex">
+        <span class="fw-bolder">{{ i18n.title.summary }}</span>
+        <span>
+            {% if group.seconds %}
+            <span class="badge bg-success rounded-pill">{{ group.seconds }}s</span>
+            {% endif %}
+            {% if group.times %}
+            <span class="badge bg-success rounded-pill">{{ group.times }}</span>
+            {% endif %}
+        </span>
+    </div>
     <div class="card-body">
         <table class="table table-striped">
             <thead>
                 <tr class="text-center">
-                    <th>{{ i18n.title.seconds }}</th>
-                    <th>{{ i18n.title.times }}</th>
                     <th>{{ i18n.title.unit }}</th>
                     <th>{{ i18n.title.parallel }}</th>
                     <th>{{ i18n.title.limit }}</th>
@@ -162,8 +171,6 @@ _unit_group_tpl = """
             <tbody>
                 {% for unit in group.units %}
                 <tr class="text-center">
-                    <td>{{ group.seconds }}</td>
-                    <td>{{ group.times }}</td>
                     <td>{{ unit.name }}</td>
                     <td>{{ unit.parallel }}</td>
                     <td>{{ unit.limit }}</td>
