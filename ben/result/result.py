@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-
-
+import random
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from dateutil import parser
@@ -171,6 +170,9 @@ class UnitResult:
     stage_milliseconds: int
     stage_times: int
     current_stage: UnitStageResult
+    max_step_size: int
+    steps: list[StepResult]
+    quantile: list
 
     def to_json(self):
         return {
@@ -191,6 +193,7 @@ class UnitResult:
             "stages": self.stages,
             "stageMilliseconds": self.stage_milliseconds,
             "stageTimes": self.stage_times,
+            "quantile": self.quantile,
         }
 
     @staticmethod
@@ -210,15 +213,16 @@ class UnitResult:
         res.stages = [UnitStageResult.from_json(i) for i in obj["stages"]]
         res.stage_milliseconds = obj["stageMilliseconds"]
         res.stageTimes = obj["stageTimes"]
+        res.quantile = obj["quantile"]
         return res
 
     def __init__(
         self, name, parallel, limit, err_message=None,
         stage_seconds=0, stage_times=0, stage_number=100,
-        quantile=None,
+        quantile=None, max_step_size=200000,
     ):
         if quantile is None:
-            quantile = [80, 90, 95, 99, 99.9]
+            self.quantile_keys = [80, 90, 95, 99, 99.9]
         self.name = name
         self.parallel = parallel
         self.limit = limit
@@ -243,6 +247,9 @@ class UnitResult:
             self.stage_milliseconds = 100
         self.stage_times = stage_times // stage_number
         self.current_stage = UnitStageResult()
+        self.max_step_size = max_step_size
+        self.steps = list[StepResult]()
+        self.quantile = list()
 
     def add_step_result(self, result: StepResult):
         self.total += 1
@@ -264,6 +271,13 @@ class UnitResult:
             self.stages.append(self.current_stage)
             self.current_stage = UnitStageResult()
 
+        if self.max_step_size == 0:
+            self.steps.append(result)
+        elif self.max_step_size > len(self.steps):
+            self.steps.append(result)
+        else:
+            self.steps[random.randint(0, len(self.steps))] = result
+
     def summary(self):
         self.end_time = datetime.now()
         self.total_elapse = self.end_time - self.start_time
@@ -273,6 +287,9 @@ class UnitResult:
         if self.total != 0:
             self.rate = self.success / self.total
         self.code["OK"] = self.success
+
+        self.steps.sort(key=lambda x: x.elapse)
+        self.quantile = list([[k, self.steps[int(len(self.steps) * k // 100)]] for k in self.quantile_keys])
 
         self.current_stage.summary()
         self.stages.append(self.current_stage)
