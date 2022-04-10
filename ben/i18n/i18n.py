@@ -34,6 +34,9 @@ i18n = {
         "status": {
             "fail": "FAIL",
             "succ": "SUCCESS",
+        },
+        "tooltip": {
+            "save": "Save",
         }
     },
     "en": {},
@@ -61,6 +64,9 @@ i18n = {
         "status": {
             "fail": "失败",
             "succ": "成功",
+        },
+        "tooltip": {
+            "save": "保存",
         }
     }
 }

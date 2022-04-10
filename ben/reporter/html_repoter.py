@@ -180,11 +180,19 @@ _unit_group_tpl = """
     {# Code #}
     <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.code }}</span></div>
     <div class="card-body d-flex justify-content-center">
-        <div id="{{ '{}-unit-code'.format(name) }}" style="width: 300px;height:300px;"></div>
+        <div id="{{ '{}-unit-code'.format(name) }}" style="height:300px;"></div>
         <script>
+            $("#{{ '{}-unit-code'.format(name) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
             echarts.init(document.getElementById("{{ '{}-unit-code'.format(name) }}")).setOption({
               tooltip: {
                 trigger: "item"
+              },
+              toolbox: {
+                feature: {
+                  saveAsImage: {
+                    title: "{{ i18n.tooltip.save }}"
+                  }
+                }
               },
               series: [
                 {% for unit in group.units %}
@@ -213,9 +221,51 @@ _unit_group_tpl = """
               ]
             });
         </script>
-
-        {# QPS #}
     </div>
+
+    {# QPS #}
+    <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.qps }}</span></div>
+    <div class="card-body d-flex justify-content-center">
+        <div class="col-md-10 chart" id="{{ '{}-unit-qps'.format(name) }}" style="height: 300px;"></div>
+        <script>
+            $("#{{ '{}-unit-qps'.format(name) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
+            echarts.init(document.getElementById("{{ '{}-unit-qps'.format(name) }}")).setOption({
+                toolbox: {
+                  feature: {
+                    saveAsImage: {
+                      title: "{{ i18n.tooltip.save }}"
+                    }
+                  }
+                },
+                xAxis: {
+                  type: 'time',
+                  boundaryGap: false
+                },
+                yAxis: {
+                  type: 'value',
+                  boundaryGap: [0, '100%']
+                },
+                series: [
+                  {
+                    name: 'Fake Data',
+                    type: 'line',
+                    smooth: true,
+                    symbol: 'none',
+                    areaStyle: {},
+                    data: [
+                        ["2022-04-10T18:02:56.101046", 138.8566818529591],
+["2022-04-10T18:02:56.821249", 126.33025761266133],
+["2022-04-10T18:02:57.612836", 143.75354891573886],
+["2022-04-10T18:02:58.308507", 134.7750671516772],
+["2022-04-10T18:02:59.050614", 136.42546190250764],
+["2022-04-10T18:02:59.783627", 70.52434853133045],
+                    ]
+                  }
+                ]
+            });
+        </script>
+    </div>
+
 </div>
 """
 
