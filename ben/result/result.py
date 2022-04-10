@@ -289,7 +289,7 @@ class UnitGroup:
 
     @staticmethod
     def from_json(obj):
-        res = UnitGroup()
+        res = UnitGroup(obj["idx"], obj["seconds"], obj["times"])
         res.idx = obj["idx"]
         res.seconds = obj["seconds"]
         res.times = obj["times"]

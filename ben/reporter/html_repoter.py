@@ -180,19 +180,18 @@ _unit_group_tpl = """
     {# Code #}
     <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.code }}</span></div>
     <div class="card-body d-flex justify-content-center">
-        {% for unit in group.units %}
-        {% if unit.code %}
-        <div id="{{ '{}-unit-{}'.format(name, loop.index0) }}" style="width: 300px;height:300px;"></div>
+        <div id="{{ '{}-unit-code'.format(name) }}" style="width: 300px;height:300px;"></div>
         <script>
-            echarts.init(document.getElementById("{{ '{}-unit-{}'.format(name, loop.index0) }}")).setOption({
+            echarts.init(document.getElementById("{{ '{}-unit-code'.format(name) }}")).setOption({
               tooltip: {
                 trigger: "item"
               },
               series: [
+                {% for unit in group.units %}
                 {
                   name: "{{ unit.name }}",
                   type: "pie",
-                  radius: ['40%', '70%'],
+                  radius: ['{{ (70 / loop.length) * loop.index0 + 20 }}%', '{{ (70 / loop.length) * loop.index + 15 }}%'],
                   avoidLabelOverlap: false,
                   label: {
                     show: false,
@@ -209,12 +208,11 @@ _unit_group_tpl = """
                     show: false
                   },
                   data: {{ json.dumps(dict_to_items(unit.code)) }}
-                }
+                },
+                {% endfor %}
               ]
             });
         </script>
-        {% endif %}
-        {% endfor %}
 
         {# QPS #}
     </div>
