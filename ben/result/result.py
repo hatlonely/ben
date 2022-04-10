@@ -122,8 +122,9 @@ class UnitStageResult:
         res.total = obj["total"]
         res.qps = obj["qps"]
         res.rate = obj["rate"]
-        res.res_time = obj["resTime"]
+        res.res_time = timedelta(microseconds=obj["resTime"])
         res.elapse = timedelta(microseconds=obj["elapse"])
+        return res
 
     def __init__(self):
         self.time = datetime.now()
@@ -329,6 +330,7 @@ class PlanResult:
         res.is_err = obj["isErr"]
         res.err = obj["err"]
         res.unit_groups = [UnitGroup.from_json(i) for i in obj["unitGroups"]]
+        return res
 
     def __init__(self, id_, name, err_message=None):
         self.id_ = id_
@@ -364,6 +366,7 @@ class TestResult:
             "isErr": self.is_err,
             "err": self.err,
             "plans": self.plans,
+            "subTests": self.sub_tests,
         }
 
     @staticmethod
@@ -376,6 +379,7 @@ class TestResult:
             err_message=obj["err"],
         )
         res.plans = [PlanResult.from_json(i) for i in obj["plans"]]
+        res.sub_tests = [TestResult.from_json(i) for i in obj["subTests"]]
         return res
 
     def __init__(self, id_, directory, name, description="", err_message=None):
@@ -385,8 +389,8 @@ class TestResult:
         self.description = description
         self.is_err = False
         self.err = ""
-        self.plans = []
-        self.sub_tests = []
+        self.plans = list[PlanResult]()
+        self.sub_tests = list[TestResult]()
         if err_message:
             self.is_err = True
             self.err = err_message
