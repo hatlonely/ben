@@ -94,6 +94,60 @@ class StepResult:
 
 
 @dataclass
+class UnitStageResult:
+    time: datetime
+    success: int
+    total: int
+    qps: float
+    rate: float
+    res_time: timedelta
+    elapse: timedelta
+
+    def to_json(self):
+        return {
+            "time": self.time.isoformat(),
+            "success": self.success,
+            "total": self.total,
+            "qps": self.qps,
+            "rate": self.rate,
+            "resTime": (self.res_time.total_seconds() * 1000000),
+            "elapse": (self.elapse.total_seconds() * 1000000),
+        }
+
+    @staticmethod
+    def from_json(obj):
+        res = UnitStageResult()
+        res.time = parser.parse(obj["time"])
+        res.success = obj["success"]
+        res.total = obj["total"]
+        res.qps = obj["qps"]
+        res.rate = obj["rate"]
+        res.res_time = obj["resTime"]
+        res.elapse = timedelta(microseconds=obj["elapse"])
+
+    def __init__(self):
+        self.time = datetime.now()
+        self.success = 0
+        self.total = 0
+        self.qps = 0
+        self.rate = 0
+        self.res_time = timedelta(seconds=0)
+        self.elapse = timedelta(seconds=0)
+
+    def add_step_result(self, result: StepResult):
+        self.total += 1
+        if result.success:
+            self.success += 1
+            self.elapse += result.elapse
+
+    def summary(self):
+        total_elapse = datetime.now() - self.time
+        self.qps = self.success / total_elapse.total_seconds()
+        self.res_time = self.elapse / self.success
+        self.rate = self.success / self.total
+
+
+@dataclass
 class UnitResult:
     name: str
     parallel: int
@@ -110,6 +164,10 @@ class UnitResult:
     total_elapse: timedelta
     is_err: bool
     err: str
+    stages: list[UnitStageResult]
+    stage_milliseconds: int
+    stage_times: int
+    current_stage: UnitStageResult
 
     def to_json(self):
         return {
@@ -127,6 +185,9 @@ class UnitResult:
             "endTime": self.end_time.isoformat(),
             "isErr": self.is_err,
             "err": self.err,
+            "stages": self.stages,
+            "stageMilliseconds": self.stage_milliseconds,
+            "stageTimes": self.stage_times,
         }
 
     @staticmethod
@@ -143,9 +204,15 @@ class UnitResult:
         res.end_time = parser.parse(obj["endTime"])
         res.is_err = obj["isErr"]
         res.err = obj["err"]
+        res.stages = [UnitStageResult.from_json(i) for i in obj["stages"]]
+        res.stage_milliseconds = obj["stageMilliseconds"]
+        res.stageTimes = obj["stageTimes"]
         return res
 
-    def __init__(self, name, parallel, limit, err_message=None):
+    def __init__(
+        self, name, parallel, limit, err_message=None,
+        stage_seconds=0, stage_times=0, stage_number=10
+    ):
         self.name = name
         self.parallel = parallel
         self.limit = limit
@@ -164,6 +231,10 @@ class UnitResult:
         if err_message:
             self.is_err = True
             self.err = err_message
+        self.stages = list[UnitStageResult]()
+        self.stage_milliseconds = stage_seconds * 1000 // stage_number
+        self.stage_times = stage_times // stage_number
+        self.current_stage = UnitStageResult()
 
     def add_step_result(self, result: StepResult):
         self.total += 1
@@ -175,12 +246,25 @@ class UnitResult:
                 self.code[result.code] = 0
             self.code[result.code] += 1
 
+        self.current_stage.add_step_result(result)
+        if self.stage_milliseconds != 0 and (datetime.now() - self.current_stage.time).total_seconds() * 1000 >= self.stage_milliseconds:
+            self.current_stage.summary()
+            self.stages.append(self.current_stage)
+            self.current_stage = UnitStageResult()
+        if self.stage_times != 0 and self.current_stage.total >= self.stage_times:
+            self.current_stage.summary()
+            self.stages.append(self.current_stage)
+            self.current_stage = UnitStageResult()
+
     def summary(self):
         self.end_time = datetime.now()
         self.total_elapse = self.end_time - self.start_time
         self.qps = self.success / self.total_elapse.total_seconds()
         self.res_time = self.elapse / self.success
         self.rate = self.success / self.total
+
+        self.current_stage.summary()
+        self.stages.append(self.current_stage)
 
 
 @dataclass
