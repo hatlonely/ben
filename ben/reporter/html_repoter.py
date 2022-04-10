@@ -215,6 +215,8 @@ _unit_group_tpl = """
         </script>
         {% endif %}
         {% endfor %}
+
+        {# QPS #}
     </div>
 </div>
 """

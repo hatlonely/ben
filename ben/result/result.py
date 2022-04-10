@@ -266,6 +266,7 @@ class UnitResult:
             self.res_time = self.elapse / self.success
         if self.total != 0:
             self.rate = self.success / self.total
+        self.code["OK"] = self.success
 
         self.current_stage.summary()
         self.stages.append(self.current_stage)
