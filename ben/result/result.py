@@ -143,8 +143,10 @@ class UnitStageResult:
     def summary(self):
         total_elapse = datetime.now() - self.time
         self.qps = self.success / total_elapse.total_seconds()
-        self.res_time = self.elapse / self.success
-        self.rate = self.success / self.total
+        if self.success != 0:
+            self.res_time = self.elapse / self.success
+        if self.total != 0:
+            self.rate = self.success / self.total
 
 
 @dataclass
@@ -260,8 +262,10 @@ class UnitResult:
         self.end_time = datetime.now()
         self.total_elapse = self.end_time - self.start_time
         self.qps = self.success / self.total_elapse.total_seconds()
-        self.res_time = self.elapse / self.success
-        self.rate = self.success / self.total
+        if self.success != 0:
+            self.res_time = self.elapse / self.success
+        if self.total != 0:
+            self.rate = self.success / self.total
 
         self.current_stage.summary()
         self.stages.append(self.current_stage)
