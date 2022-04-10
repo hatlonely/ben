@@ -19,7 +19,7 @@ seed:
           key2: val22
 
 plan:
-  - name: ben1
+  - name: Benchmark1
     group:
       - times: 1000
         parallel: [5, 5]
