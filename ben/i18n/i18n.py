@@ -32,6 +32,7 @@ i18n = {
             "code": "Code",
             "summary": "Summary",
             "quantile": "Quantile",
+            "quantileShort": "Q",
         },
         "status": {
             "fail": "FAIL",
@@ -64,6 +65,7 @@ i18n = {
             "code": "错误码",
             "summary": "汇总",
             "quantile": "分位数",
+            "quantileShort": "Q",
         },
         "status": {
             "fail": "失败",

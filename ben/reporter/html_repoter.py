@@ -167,7 +167,7 @@ _unit_group_tpl = """
                     <th>{{ i18n.title.qps }}</th>
                     <th>{{ i18n.title.resTime }}</th>
                     {% for q in group.quantile %}
-                    <th>{{ i18n.title.quantile }}{{ q }}</th>
+                    <th>{{ i18n.title.quantileShort }}{{ q }}</th>
                     {% endfor %}
                 </tr>
             </thead>
@@ -385,11 +385,11 @@ class HtmlReporter(Reporter):
     @staticmethod
     def format_timedelta(t: datetime.timedelta):
         if t >= datetime.timedelta(seconds=1):
-            return "{:.3f}s".format(t.total_seconds())
+            return "{:.2f}s".format(t.total_seconds())
         if t >= datetime.timedelta(milliseconds=1):
-            return "{:.3f}ms".format(t.total_seconds()*1000)
+            return "{:.2f}ms".format(t.total_seconds()*1000)
         if t >= datetime.timedelta(microseconds=1):
-            return "{:.3f}us".format(t.total_seconds()*1000000)
+            return "{:.2f}us".format(t.total_seconds()*1000000)
         return "{:.3f}ns".format(t.total_seconds()*1000000000)
 
     @staticmethod
