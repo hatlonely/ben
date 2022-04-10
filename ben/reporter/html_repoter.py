@@ -166,6 +166,9 @@ _unit_group_tpl = """
                     <th>{{ i18n.title.rate }}</th>
                     <th>{{ i18n.title.qps }}</th>
                     <th>{{ i18n.title.resTime }}</th>
+                    {% for q in group.quantile %}
+                    <th>{{ i18n.title.quantile }}{{ q }}</th>
+                    {% endfor %}
                 </tr>
             </thead>
             <tbody>
@@ -178,6 +181,9 @@ _unit_group_tpl = """
                     <td>{{ int(unit.rate * 10000) / 100 }}%</td>
                     <td>{{ int(unit.qps) }}</td>
                     <td>{{ format_timedelta(unit.res_time) }}</td>
+                    {% for q in group.quantile %}
+                    <td>{{ format_timedelta(unit.quantile["80"]) }}</td>
+                    {% endfor %}
                 </tr>
                 {% endfor %}
             </tbody>

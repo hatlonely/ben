@@ -172,7 +172,8 @@ class UnitResult:
     current_stage: UnitStageResult
     max_step_size: int
     steps: list[StepResult]
-    quantile: list
+    quantile_keys: list
+    quantile: dict
 
     def to_json(self):
         return {
@@ -193,7 +194,7 @@ class UnitResult:
             "stages": self.stages,
             "stageMilliseconds": self.stage_milliseconds,
             "stageTimes": self.stage_times,
-            "quantile": self.quantile,
+            "quantile": dict([(k, int(v.total_seconds() * 1000000)) for k, v in self.quantile.items()])
         }
 
     @staticmethod
@@ -213,7 +214,7 @@ class UnitResult:
         res.stages = [UnitStageResult.from_json(i) for i in obj["stages"]]
         res.stage_milliseconds = obj["stageMilliseconds"]
         res.stageTimes = obj["stageTimes"]
-        res.quantile = obj["quantile"]
+        res.quantile = dict([(k, timedelta(microseconds=v)) for k, v in obj["quantile"].items()])
         return res
 
     def __init__(
@@ -221,7 +222,8 @@ class UnitResult:
         stage_seconds=0, stage_times=0, stage_number=100,
         quantile=None, max_step_size=200000,
     ):
-        if quantile is None:
+        self.quantile_keys = quantile
+        if self.quantile_keys is None:
             self.quantile_keys = [80, 90, 95, 99, 99.9]
         self.name = name
         self.parallel = parallel
@@ -249,7 +251,7 @@ class UnitResult:
         self.current_stage = UnitStageResult()
         self.max_step_size = max_step_size
         self.steps = list[StepResult]()
-        self.quantile = list()
+        self.quantile = dict()
 
     def add_step_result(self, result: StepResult):
         self.total += 1
@@ -289,7 +291,7 @@ class UnitResult:
         self.code["OK"] = self.success
 
         self.steps.sort(key=lambda x: x.elapse)
-        self.quantile = list([[k, self.steps[int(len(self.steps) * k // 100)]] for k in self.quantile_keys])
+        self.quantile = dict([(k, self.steps[int(len(self.steps) * k // 100)].elapse) for k in self.quantile_keys])
 
         self.current_stage.summary()
         self.stages.append(self.current_stage)
