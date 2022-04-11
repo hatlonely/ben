@@ -34,7 +34,8 @@ plan:
           req: seed1
   - name: BenchmarkShell
     monitor:
-      - type: psutil
+      psutil:
+        type: psutil
         args:
           interval: 0.1
           metrics: ["CPU", "Mem", "Disk", "IO", "Network"]

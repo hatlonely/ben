@@ -304,6 +304,7 @@ class UnitGroup:
     times: int
     units: list[UnitResult]
     quantile: list
+    monitor: list
 
     def to_json(self):
         return {
@@ -311,7 +312,8 @@ class UnitGroup:
             "seconds": self.seconds,
             "times": self.times,
             "units": self.units,
-            "quantile": self.quantile
+            "quantile": self.quantile,
+            #"monitor": dict([(k, list([[i[0].isoformat(), i[1]] for i in v]), for k, v in self.monitor)
         }
 
     @staticmethod
@@ -321,6 +323,7 @@ class UnitGroup:
         res.seconds = obj["seconds"]
         res.times = obj["times"]
         res.units = [UnitResult.from_json(i) for i in obj["units"]]
+        res.monitor = list([[] for i in obj["monitor"]])
         return res
 
     def __init__(self, idx, seconds, times, quantile=None):
@@ -332,9 +335,13 @@ class UnitGroup:
         self.seconds = seconds
         self.times = times
         self.units = list[UnitResult]()
+        self.monitor = []
 
     def add_unit_result(self, unit):
         self.units.append(unit)
+
+    def add_monitor_stat(self, stat):
+        self.monitor.append(stat)
 
 
 @dataclass

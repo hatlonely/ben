@@ -259,7 +259,7 @@ class Framework:
         plan_info = merge(plan_info, {
             "group": [],
             "unit": [],
-            "monitor": [],
+            "monitor": {},
         })
 
         plan_result = PlanResult(plan_info["planID"], plan_info["name"])
@@ -271,15 +271,15 @@ class Framework:
                 "maxStepSize": 200000,
             })
 
-            monitors = list[Monitor]()
-            for info in plan_info["monitor"]:
+            monitors = dict[str, Monitor]()
+            for key, info in plan_info["monitor"].items():
                 val = merge(info, {
                     "type": REQUIRED,
                     "args": {}
                 })
                 val = render(val, var=context.var, x=constant.x, peval=customize.keyPrefix.eval, pexec=customize.keyPrefix.exec, pshell=customize.keyPrefix.shell)
-                monitors.append(constant.monitor_map[val["type"]](val["args"]))
-            for m in monitors:
+                monitors[key] = constant.monitor_map[val["type"]](val["args"])
+            for _, m in monitors.items():
                 m.collect()
 
             start = datetime.now()
@@ -300,7 +300,7 @@ class Framework:
             for result in results:
                 unit_group.add_unit_result(result)
             end = datetime.now()
-            for m in monitors:
+            for k, m in monitors.items():
                 print(m.stat(start, end))
 
             plan_result.add_unit_group(unit_group)
