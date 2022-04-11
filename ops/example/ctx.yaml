@@ -40,9 +40,9 @@ plan:
           interval: 0.3
           metrics: ["CPU", "Mem", "Disk", "IO", "Network"]
     group:
-      - times: 2000
+      - times: 20000
         parallel: [5, 5]
-      - seconds: 2
+      - seconds: 20
         parallel: [10, 10]
     unit:
       - name: echohello1
