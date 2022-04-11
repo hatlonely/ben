@@ -36,6 +36,7 @@ plan:
     monitor:
       - type: psutil
         args:
+          interval: 0.1
           metrics: ["CPU", "Mem", "Disk", "IO", "Network"]
     group:
       - times: 2000

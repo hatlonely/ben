@@ -13,7 +13,7 @@ from .monitor import Monitor
 class PsUtilMonitor(Monitor):
     def __init__(self, args=None):
         args = merge(args, {
-            "seconds": 1,
+            "interval": 1,
             "metrics": [
                 "CPU", "Mem"
             ],
@@ -23,7 +23,7 @@ class PsUtilMonitor(Monitor):
         self.stop = False
         self.network_interface = args["networkInterface"]
 
-        self.delay = args["seconds"]
+        self.delay = args["interval"]
         self.enable_metrics = set(args["metrics"])
         self.thread = None
 
@@ -56,6 +56,10 @@ class PsUtilMonitor(Monitor):
                     net_io = net_io[self.network_interface]
                     metric["NetIOR"] = net_io.bytes_recv
                     metric["NetIOW"] = net_io.bytes_sent
-            self.metrics.append(metric)
-            time.sleep((now - datetime.now()).total_seconds() + self.delay)
-            now += timedelta(seconds=self.delay)
+            self.metrics.append([now, metric])
+            sleep_time = (now - datetime.now()).total_seconds() + self.delay
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+                now += timedelta(seconds=self.delay)
+            else:
+                now = datetime.now()
