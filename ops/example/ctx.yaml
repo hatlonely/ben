@@ -33,6 +33,10 @@ plan:
         seed:
           req: seed1
   - name: BenchmarkShell
+    monitor:
+      - type: psutil
+        args:
+          metrics: ["CPU", "Mem", "Disk", "IO", "Network"]
     group:
       - times: 2000
         parallel: [5, 5]

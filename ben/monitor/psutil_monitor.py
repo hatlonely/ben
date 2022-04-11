@@ -13,7 +13,7 @@ from .monitor import Monitor
 class PsUtilMonitor(Monitor):
     def __init__(self, args=None):
         args = merge(args, {
-            "seconds": 0,
+            "seconds": 1,
             "metrics": [
                 "CPU", "Mem"
             ],
@@ -23,12 +23,7 @@ class PsUtilMonitor(Monitor):
         self.stop = False
         self.network_interface = args["networkInterface"]
 
-        self.delay = args["seconds"] / 100
-        if self.delay == 0:
-            self.delay = 1
-        elif self.delay <= 0.1:
-            self.delay = 0.1
-
+        self.delay = args["seconds"]
         self.enable_metrics = set(args["metrics"])
         self.thread = None
 
