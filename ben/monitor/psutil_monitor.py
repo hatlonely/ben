@@ -30,7 +30,22 @@ class PsUtilMonitor(Monitor):
         self.mutex = threading.Lock()
 
     def keys(self):
-        return list(self.enable_metrics)
+        k = []
+        if "CPU" in self.enable_metrics:
+            k.append("CPU")
+        if "Mem" in self.enable_metrics:
+            k.append("Mem")
+        if "Disk" in self.enable_metrics:
+            k.append("Disk")
+        if "IO" in self.enable_metrics:
+            k.append("IOR")
+            k.append("IOW")
+        if "Network" in self.enable_metrics:
+            net_io = psutil.net_io_counters(pernic=True)
+            if self.network_interface in net_io:
+                k.append("NetIOR")
+                k.append("NetIOW")
+        return k
 
     def collect(self):
         self.thread = threading.Thread(target=self.collect_thread)
