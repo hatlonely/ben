@@ -66,9 +66,9 @@ class PsUtilMonitor(Monitor):
             if "CPU" in self.enable_metrics:
                 metric["CPU"] = psutil.cpu_percent()
             if "Mem" in self.enable_metrics:
-                metric["Mem"] = psutil.virtual_memory().used
+                metric["Mem"] = psutil.virtual_memory().used / 1024 / 1024
             if "Disk" in self.enable_metrics:
-                metric["Disk"] = psutil.disk_usage("/").used
+                metric["Disk"] = psutil.disk_usage("/").used / 1024 / 1024 / 1024
             if "IO" in self.enable_metrics:
                 io = psutil.disk_io_counters(perdisk=False)
                 metric["IOR"] = io.read_count
