@@ -11,5 +11,7 @@ monitor_map = {
 
 
 __all__ = [
-    "Monitor"
+    "Monitor",
+    "PsUtilMonitor",
+    "monitor_map",
 ]
