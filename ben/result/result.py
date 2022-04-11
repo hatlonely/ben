@@ -294,9 +294,6 @@ class UnitResult:
         self.steps.sort(key=lambda x: x.elapse)
         self.quantile = dict([(str(k), self.steps[int(len(self.steps) * k // 100)].elapse) for k in self.quantile_keys])
 
-        self.current_stage.summary()
-        self.stages.append(self.current_stage)
-
 
 @dataclass
 class UnitGroup:
