@@ -37,7 +37,7 @@ plan:
       psutil:
         type: psutil
         args:
-          interval: 0.1
+          interval: 0.3
           metrics: ["CPU", "Mem", "Disk", "IO", "Network"]
     group:
       - times: 2000

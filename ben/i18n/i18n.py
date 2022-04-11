@@ -33,6 +33,7 @@ i18n = {
             "summary": "Summary",
             "quantile": "Quantile",
             "quantileShort": "Q",
+            "monitor": "Monitor",
         },
         "status": {
             "fail": "FAIL",
@@ -66,6 +67,7 @@ i18n = {
             "summary": "汇总",
             "quantile": "分位数",
             "quantileShort": "Q",
+            "monitor": "监测",
         },
         "status": {
             "fail": "失败",

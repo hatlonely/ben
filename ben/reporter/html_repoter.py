@@ -323,6 +323,55 @@ _unit_group_tpl = """
             });
         </script>
     </div>
+    
+    {# Monitor #}
+    {% for mname, stat in group.monitor.items() %}
+    <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.monitor }}-{{ mname }}</span></div>
+    {% for serial in ["CPU", "Mem"] %}
+    <div class="card-body d-flex justify-content-center">
+        <div class="col-md-12" id="{{ '{}-monitor-{}-{}'.format(name, mname, serial) }}" style="width:800px;height: 300px;"></div>
+        <script>
+            //$("#{{ '{}-monitor-{}-{}'.format(name, mname, serial) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
+            echarts.init(document.getElementById("{{ '{}-monitor-{}-{}'.format(name, mname, serial) }}")).setOption({
+              title: {
+                text: "{{ serial }}"
+              },
+              tooltip: {
+                trigger: 'axis',
+                position: function (pt) {
+                  return [pt[0], '10%'];
+                }
+              },
+              toolbox: {
+                feature: {
+                  saveAsImage: {
+                    title: "{{ i18n.tooltip.save }}"
+                  }
+                }
+              },
+              xAxis: {
+                type: "time",
+                boundaryGap: false
+              },
+              yAxis: {
+                type: "value",
+                boundaryGap: [0, '100%']
+              },
+              series: [
+                {
+                  name: "{{ serial }}",
+                  type: "line",
+                  smooth: true,
+                  symbol: "none",
+                  areaStyle: {},
+                  data: {{ json.dumps(monitor_serial(stat, serial)) }}
+                },
+              ]
+            });
+        </script>
+    </div>
+    {% endfor %}
+    {% endfor %}
 </div>
 """
 
@@ -358,6 +407,7 @@ class HtmlReporter(Reporter):
         env.globals.update(format_timedelta=HtmlReporter.format_timedelta)
         env.globals.update(dict_to_items=HtmlReporter.dict_to_items)
         env.globals.update(unit_stage_serial=HtmlReporter.unit_stage_serial)
+        env.globals.update(monitor_serial=HtmlReporter.monitor_serial)
         env.globals.update(json=json, int=int, list=list)
         env.globals.update(render_test=self.render_test)
         env.globals.update(render_plan=self.render_plan)
@@ -401,4 +451,11 @@ class HtmlReporter(Reporter):
         return list([
             [stage.time.isoformat(), getattr(stage, serial)]
             for stage in unit.stages
+        ])
+
+    @staticmethod
+    def monitor_serial(stat, serial):
+        return list([
+            [i[0].isoformat(), i[1][serial]]
+            for i in stat
         ])
