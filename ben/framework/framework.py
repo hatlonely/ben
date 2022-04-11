@@ -261,6 +261,7 @@ class Framework:
                 "seconds": 0,
                 "times": 0,
                 "quantile": [80, 90, 95, 99, 99.9],
+                "maxStepSize": 200000,
             })
             stop = Stop(group)
             pool = concurrent.futures.ThreadPoolExecutor(max_workers=len(plan_info["unit"]))
@@ -270,9 +271,9 @@ class Framework:
                 repeat(constant),
                 repeat(context),
                 repeat(stop),
-                repeat(group["quantile"]),
                 repeat(1) if "parallel" not in group else [i for i in group["parallel"]],
                 repeat(0) if "limit" not in group else [i for i in group["limit"]],
+                repeat(group),
                 [i for i in plan_info["unit"]],
             )
             unit_group = UnitGroup(idx, group["seconds"], group["times"], quantile=group["quantile"])
@@ -287,9 +288,9 @@ class Framework:
         constant: RuntimeConstant,
         context: RuntimeContext,
         stop: Stop,
-        quantile: list,
         parallel,
         limit,
+        group_info,
         unit_info,
     ):
         unit_info = merge(unit_info, {"name": "unit"})
@@ -298,7 +299,7 @@ class Framework:
             hook.on_unit_start(unit_info)
 
         try:
-            result = Framework.run_unit(customize, constant, context, stop, quantile, parallel, limit, unit_info)
+            result = Framework.run_unit(customize, constant, context, stop, parallel, limit, group_info, unit_info)
         except Exception as e:
             result = UnitResult(unit_info["name"], parallel, limit, err_message="Exception {}".format(traceback.format_exc()))
 
@@ -312,9 +313,9 @@ class Framework:
         constant: RuntimeConstant,
         context: RuntimeContext,
         stop: Stop,
-        quantile: list,
         parallel,
         limit,
+        group_info,
         unit_info,
     ):
         unit_info = merge(unit_info, {
@@ -338,7 +339,7 @@ class Framework:
         unit_result = UnitResult(
             unit_info["name"], parallel, limit,
             stage_seconds=stop.seconds, stage_times=stop.times,
-            quantile=quantile,
+            quantile=group_info["quantile"], max_step_size=group_info["maxStepSize"],
         )
         while stop.is_running() or not q.empty():
             step_result = q.get()
