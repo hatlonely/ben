@@ -301,8 +301,7 @@ class Framework:
                 unit_group.add_unit_result(result)
             end = datetime.now()
             for k, m in monitors.items():
-                print(m.stat(start, end))
-
+                unit_group.add_monitor_stat(k, m.stat(start, end))
             plan_result.add_unit_group(unit_group)
         return plan_result
 
