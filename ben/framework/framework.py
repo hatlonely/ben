@@ -22,6 +22,7 @@ from ..seed import seed_map, Seed
 from ..driver import Driver, driver_map
 from ..reporter import reporter_map
 from ..hook import Hook, hook_map
+from ..monitor import Monitor, monitor_map
 from ..result import TestResult, PlanResult, UnitGroup, UnitResult, StepResult, SubStepResult
 from .stop import Stop
 
@@ -33,6 +34,7 @@ class RuntimeConstant:
     plan_directory: str
     driver_map: dict
     seed_map: dict
+    monitor_map: dict
     hooks: list[Hook]
     x: any
 
@@ -62,6 +64,7 @@ class Framework:
         self.reporter_map = reporter_map
         self.driver_map = driver_map
         self.hook_map = hook_map
+        self.monitor_map = monitor_map
         self.x = None
         if x:
             self.x = Framework.load_x(x)
@@ -73,6 +76,8 @@ class Framework:
                 self.driver_map = self.driver_map | self.x.driver_map
             if hasattr(self.x, "hook_map"):
                 self.hook_map = self.hook_map | self.x.hook_map
+            if hasattr(self.x, "monitor_map"):
+                self.monitor_map = self.monitor_map | self.x.monitor_map
 
         if not customize and os.path.exists(os.path.join(pathlib.Path.home(), ".ben/customize.yaml")):
             customize = os.path.join(pathlib.Path.home(), ".ben/customize.yaml")
@@ -129,7 +134,8 @@ class Framework:
             test_directory=test_directory,
             plan_directory=test_directory if not plan_directory else os.path.join(test_directory, plan_directory.strip().rstrip("/")),
             driver_map=self.driver_map,
-            seed_map=seed_map,
+            seed_map=self.seed_map,
+            monitor_map=self.monitor_map,
             x=self.x,
             hooks=self.hooks,
         )
