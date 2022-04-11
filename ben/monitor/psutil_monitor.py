@@ -27,19 +27,27 @@ class PsUtilMonitor(Monitor):
         self.enable_metrics = set(args["metrics"])
         self.thread = None
 
+        self.mutex = threading.Lock()
+
+    def keys(self):
+        return list(self.enable_metrics)
+
     def collect(self):
         self.thread = threading.Thread(target=self.collect_thread)
         self.thread.start()
 
     def stat(self, start, end):
-        self.stop = True
+        with self.mutex:
+            self.stop = True
         self.thread.join()
         return self.metrics[1:]
 
     def collect_thread(self):
         now = datetime.now()
-        while not self.stop:
-            metric = {}
+        while True:
+            metric = {
+                "time": now.isoformat()
+            }
             if "CPU" in self.enable_metrics:
                 metric["CPU"] = psutil.cpu_percent()
             if "Mem" in self.enable_metrics:
@@ -56,10 +64,13 @@ class PsUtilMonitor(Monitor):
                     net_io = net_io[self.network_interface]
                     metric["NetIOR"] = net_io.bytes_recv
                     metric["NetIOW"] = net_io.bytes_sent
-            self.metrics.append([now, metric])
+            self.metrics.append(metric)
             sleep_time = (now - datetime.now()).total_seconds() + self.delay
             if sleep_time > 0:
                 time.sleep(sleep_time)
                 now += timedelta(seconds=self.delay)
             else:
                 now = datetime.now()
+            with self.mutex:
+                if self.stop:
+                    break

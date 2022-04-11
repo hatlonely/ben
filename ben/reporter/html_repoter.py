@@ -325,9 +325,9 @@ _unit_group_tpl = """
     </div>
     
     {# Monitor #}
-    {% for mname, stat in group.monitor.items() %}
+    {% for mname, monitor in group.monitor.items() %}
     <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.monitor }}-{{ mname }}</span></div>
-    {% for serial in ["CPU", "Mem"] %}
+    {% for serial in monitor["keys"] %}
     <div class="card-body d-flex justify-content-center">
         <div class="col-md-12" id="{{ '{}-monitor-{}-{}'.format(name, mname, serial) }}" style="width:800px;height: 300px;"></div>
         <script>
@@ -364,7 +364,7 @@ _unit_group_tpl = """
                   smooth: true,
                   symbol: "none",
                   areaStyle: {},
-                  data: {{ json.dumps(monitor_serial(stat, serial)) }}
+                  data: {{ json.dumps(monitor_serial(monitor["stat"], serial)) }}
                 },
               ]
             });
@@ -456,6 +456,6 @@ class HtmlReporter(Reporter):
     @staticmethod
     def monitor_serial(stat, serial):
         return list([
-            [i[0].isoformat(), i[1][serial]]
+            [i["time"], i[serial]]
             for i in stat
         ])

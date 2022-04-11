@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import random
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -313,10 +314,7 @@ class UnitGroup:
             "times": self.times,
             "units": self.units,
             "quantile": self.quantile,
-            "monitor": dict([
-                (k, list([[i[0].isoformat(), i[1]] for i in v]))
-                for k, v in self.monitor.items()
-            ])
+            "monitor": self.monitor,
         }
 
     @staticmethod
@@ -326,10 +324,7 @@ class UnitGroup:
         res.seconds = obj["seconds"]
         res.times = obj["times"]
         res.units = [UnitResult.from_json(i) for i in obj["units"]]
-        res.monitor = dict([
-            (k, list([[parser.parse(i[0]), i[1]] for i in v]))
-            for k, v in obj["monitor"].items()
-        ])
+        res.monitor = obj["monitor"]
         return res
 
     def __init__(self, idx, seconds, times, quantile=None):
@@ -341,13 +336,16 @@ class UnitGroup:
         self.seconds = seconds
         self.times = times
         self.units = list[UnitResult]()
-        self.monitor = {}
+        self.monitor = dict()
 
     def add_unit_result(self, unit):
         self.units.append(unit)
 
-    def add_monitor_stat(self, name, stat):
-        self.monitor[name] = stat
+    def add_monitor_stat(self, name, metrics, stat):
+        self.monitor[name] = {
+            "keys": metrics,
+            "stat": stat,
+        }
 
 
 @dataclass
