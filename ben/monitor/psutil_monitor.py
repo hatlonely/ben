@@ -55,7 +55,7 @@ class PsUtilMonitor(Monitor):
         with self.mutex:
             self.stop = True
         self.thread.join()
-        return self.metrics[1:]
+        return [self.metrics[1:]]
 
     def collect_thread(self):
         now = datetime.now()
