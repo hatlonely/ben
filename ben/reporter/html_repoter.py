@@ -99,7 +99,7 @@ _plan_tpl = """
 <a class="card-title btn d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#{{ name }}" role="button" aria-expanded="false" aria-controls="{{ name }}">
     {{ plan.name }}
 </a>
-<div class="collapse card" id="{{ name }}">
+<div class="card collapse show" id="{{ name }}">
     {% if plan.is_err %}
     <div class="card border-danger">
     {% else %}
@@ -195,7 +195,6 @@ _unit_group_tpl = """
     <div class="card-body d-flex justify-content-center">
         <div  class="col-md-12" id="{{ '{}-unit-code'.format(name) }}" style="height: 300px;"></div>
         <script>
-            $("#{{ '{}-unit-code'.format(name) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
             echarts.init(document.getElementById("{{ '{}-unit-code'.format(name) }}")).setOption({
               tooltip: {
                 trigger: "item"
@@ -241,7 +240,6 @@ _unit_group_tpl = """
     <div class="card-body d-flex justify-content-center">
         <div class="col-md-12" id="{{ '{}-unit-qps'.format(name) }}" style="height: 300px;"></div>
         <script>
-            $("#{{ '{}-unit-qps'.format(name) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
             echarts.init(document.getElementById("{{ '{}-unit-qps'.format(name) }}")).setOption({
               tooltip: {
                 trigger: 'axis',
@@ -285,7 +283,6 @@ _unit_group_tpl = """
     <div class="card-body d-flex justify-content-center">
         <div class="col-md-12" id="{{ '{}-unit-rate'.format(name) }}" style="height: 300px;"></div>
         <script>
-            $("#{{ '{}-unit-rate'.format(name) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
             echarts.init(document.getElementById("{{ '{}-unit-rate'.format(name) }}")).setOption({
               tooltip: {
                 trigger: 'axis',
@@ -329,9 +326,8 @@ _unit_group_tpl = """
     <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.monitor }}-{{ mname }}</span></div>
     {% for serial in monitor["keys"] %}
     <div class="card-body d-flex justify-content-center">
-        <div class="col-md-12" id="{{ '{}-monitor-{}-{}'.format(name, mname, serial) }}" style="width:800px;height: 300px;"></div>
+        <div class="col-md-12" id="{{ '{}-monitor-{}-{}'.format(name, mname, serial) }}" style="height: 300px;"></div>
         <script>
-            //$("#{{ '{}-monitor-{}-{}'.format(name, mname, serial) }}").css( 'width', ($("#test").width() - ({{ name.count("-") }} - 1) * 20) + "px" );
             echarts.init(document.getElementById("{{ '{}-monitor-{}-{}'.format(name, mname, serial) }}")).setOption({
               title: {
                 text: "{{ serial }}"
