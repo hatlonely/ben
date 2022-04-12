@@ -33,6 +33,39 @@ _report_tpl = """<!DOCTYPE html>
         }
     </style>
 
+    <script>
+    var yAxisLabelFormatter = {
+        byte: (b) => {
+          const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+          let l = 0, n = parseInt(b, 10) || 0;
+          while(n >= 1024 && ++l){
+              n = n/1024;
+          }
+          return(n.toFixed(n < 10 && l > 0 ? 1 : 0) + ' ' + units[l]);
+        },
+        bit: (b) => {
+          const units = ['b', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb', 'Eb', 'Zb', 'Yb'];
+          let l = 0, n = parseInt(b, 10) || 0;
+          while(n >= 1024 && ++l){
+              n = n/1024;
+          }
+          return(n.toFixed(n < 10 && l > 0 ? 1 : 0) + ' ' + units[l]);
+        },
+        percent: (v) => {
+            return v + "%";
+        },
+        times: (v) => {
+          const units = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'];
+          let l = 0, n = parseInt(v, 10) || 0;
+          while(n >= 1024 && ++l){
+              n = n/1024;
+          }
+          return(n.toFixed(n < 10 && l > 0 ? 1 : 0) + ' ' + units[l]);
+        }
+    }
+
+    </script>
+
     {{ customize.extra.head }}
 </head>
 
@@ -303,7 +336,10 @@ _unit_group_tpl = """
               },
               yAxis: {
                 type: "value",
-                boundaryGap: [0, '100%']
+                boundaryGap: [0, '100%'],
+                axisLabel: {
+                  formatter: yAxisLabelFormatter["percent"],
+                }
               },
               series: [
                 {% for unit in group.units %}
@@ -326,11 +362,11 @@ _unit_group_tpl = """
     <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.monitor }}-{{ mname }}</span></div>
     {% for serial in monitor["keys"] %}
     <div class="card-body d-flex justify-content-center">
-        <div class="col-md-12" id="{{ '{}-monitor-{}-{}'.format(name, mname, serial) }}" style="height: 300px;"></div>
+        <div class="col-md-12" id="{{ '{}-monitor-{}-{}'.format(name, mname, serial["name"]) }}" style="height: 300px;"></div>
         <script>
-            echarts.init(document.getElementById("{{ '{}-monitor-{}-{}'.format(name, mname, serial) }}")).setOption({
+            echarts.init(document.getElementById("{{ '{}-monitor-{}-{}'.format(name, mname, serial["name"]) }}")).setOption({
               title: {
-                text: "{{ serial }}"
+                text: "{{ serial["name"] }}"
               },
               tooltip: {
                 trigger: 'axis',
@@ -351,16 +387,19 @@ _unit_group_tpl = """
               },
               yAxis: {
                 type: "value",
-                boundaryGap: [0, '100%']
+                boundaryGap: [0, '100%'],
+                axisLabel: {
+                  formatter: yAxisLabelFormatter["{{ serial["unit"] }}"],
+                }
               },
               series: [
                 {
-                  name: "{{ serial }}",
+                  name: "{{ serial["name"] }}",
                   type: "line",
                   smooth: true,
                   symbol: "none",
                   areaStyle: {},
-                  data: {{ json.dumps(monitor_serial(monitor["stat"], serial)) }}
+                  data: {{ json.dumps(monitor_serial(monitor["stat"], serial["name"])) }}
                 },
               ]
             });
@@ -451,7 +490,6 @@ class HtmlReporter(Reporter):
 
     @staticmethod
     def monitor_serial(stat, serial):
-        return list([
-            [i["time"], i[serial]]
-            for i in stat
-        ])
+        if serial in "rate":
+            return list([[i["time"], i[serial] * 100] for i in stat])
+        return list([[i["time"], i[serial]] for i in stat])

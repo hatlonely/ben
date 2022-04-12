@@ -32,19 +32,19 @@ class PsUtilMonitor(Monitor):
     def keys(self):
         k = []
         if "CPU" in self.enable_metrics:
-            k.append("CPU")
+            k.append({"name": "CPU", "unit": "percent"})
         if "Mem" in self.enable_metrics:
-            k.append("Mem")
+            k.append({"name": "Mem", "unit": "byte"})
         if "Disk" in self.enable_metrics:
-            k.append("Disk")
+            k.append({"name": "Disk", "unit": "byte"})
         if "IO" in self.enable_metrics:
-            k.append("IOR")
-            k.append("IOW")
+            k.append({"name": "IOR", "unit": "times"})
+            k.append({"name": "IOW", "unit": "times"})
         if "Network" in self.enable_metrics:
             net_io = psutil.net_io_counters(pernic=True)
             if self.network_interface in net_io:
-                k.append("NetIOR")
-                k.append("NetIOW")
+                k.append({"name": "NetIOR", "unit": "bit"})
+                k.append({"name": "NetIOW", "unit": "bit"})
         return k
 
     def collect(self):
@@ -66,9 +66,9 @@ class PsUtilMonitor(Monitor):
             if "CPU" in self.enable_metrics:
                 metric["CPU"] = psutil.cpu_percent()
             if "Mem" in self.enable_metrics:
-                metric["Mem"] = psutil.virtual_memory().used / 1024 / 1024
+                metric["Mem"] = psutil.virtual_memory().used
             if "Disk" in self.enable_metrics:
-                metric["Disk"] = psutil.disk_usage("/").used / 1024 / 1024 / 1024
+                metric["Disk"] = psutil.disk_usage("/").used
             if "IO" in self.enable_metrics:
                 io = psutil.disk_io_counters(perdisk=False)
                 metric["IOR"] = io.read_count
