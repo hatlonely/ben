@@ -224,11 +224,17 @@ _unit_group_tpl = """
     </div>
 
     {# Code #}
-    <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.code }}</span></div>
     <div class="card-body d-flex justify-content-center">
         <div  class="col-md-12" id="{{ '{}-unit-code'.format(name) }}" style="height: 300px;"></div>
         <script>
             echarts.init(document.getElementById("{{ '{}-unit-code'.format(name) }}")).setOption({
+              title: {
+                text: "{{ i18n.title.code }}",
+                left: "center",
+              },
+              textStyle: {
+                fontFamily: "{{ customize.font.echarts }}",
+              },
               tooltip: {
                 trigger: "item"
               },
@@ -244,7 +250,7 @@ _unit_group_tpl = """
                 {
                   name: "{{ unit.name }}",
                   type: "pie",
-                  radius: ['{{ (70 / loop.length) * loop.index0 + 20 }}%', '{{ (70 / loop.length) * loop.index + 15 }}%'],
+                  radius: ['{{ (70 / loop.length) * loop.index0 + 15 }}%', '{{ (70 / loop.length) * loop.index + 10 }}%'],
                   avoidLabelOverlap: false,
                   label: {
                     show: false,
@@ -269,11 +275,17 @@ _unit_group_tpl = """
     </div>
 
     {# QPS #}
-    <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.qps }}</span></div>
     <div class="card-body d-flex justify-content-center">
         <div class="col-md-12" id="{{ '{}-unit-qps'.format(name) }}" style="height: 300px;"></div>
         <script>
             echarts.init(document.getElementById("{{ '{}-unit-qps'.format(name) }}")).setOption({
+              title: {
+                text: "{{ i18n.title.qps }}",
+                left: "center",
+              },
+              textStyle: {
+                fontFamily: "{{ customize.font.echarts }}",
+              },
               tooltip: {
                 trigger: 'axis',
                 position: function (pt) {
@@ -312,11 +324,17 @@ _unit_group_tpl = """
     </div>
 
     {# Rate #}
-    <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.rate }}</span></div>
     <div class="card-body d-flex justify-content-center">
         <div class="col-md-12" id="{{ '{}-unit-rate'.format(name) }}" style="height: 300px;"></div>
         <script>
             echarts.init(document.getElementById("{{ '{}-unit-rate'.format(name) }}")).setOption({
+              title: {
+                text: "{{ i18n.title.rate }}",
+                left: "center",
+              },
+              textStyle: {
+                fontFamily: "{{ customize.font.echarts }}",
+              },
               tooltip: {
                 trigger: 'axis',
                 position: function (pt) {
@@ -368,6 +386,9 @@ _unit_group_tpl = """
               title: {
                 text: "{{ serial["name"] }}",
                 left: "center",
+              },
+              textStyle: {
+                fontFamily: "{{ customize.font.echarts }}",
               },
               tooltip: {
                 trigger: 'axis',
@@ -425,6 +446,7 @@ class HtmlReporter(Reporter):
 """,
                 "body": "'Roboto Condensed', sans-serif !important",
                 "code": "'JetBrains Mono', monospace !important",
+                "echarts": "Roboto Condensed",
             },
             "extra": {
                 "head": "",
