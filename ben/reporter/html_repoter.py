@@ -506,9 +506,9 @@ class HtmlReporter(Reporter):
     @staticmethod
     def unit_stage_serial(unit: UnitResult, serial):
         if serial in ["rate"]:
-            return list([[stage.time.isoformat(), getattr(stage, serial) * 100] for stage in unit.stages])
-        return list([[stage.time.isoformat(), getattr(stage, serial)] for stage in unit.stages])
+            return list([[stage.time.isoformat(), round(getattr(stage, serial) * 100, 2)] for stage in unit.stages])
+        return list([[stage.time.isoformat(), round(getattr(stage, serial), 2)] for stage in unit.stages])
 
     @staticmethod
     def monitor_serial(stat, serial):
-        return list([[i["time"], i[serial]] for i in stat])
+        return list([[i["time"], round(i[serial], 2)] for i in stat])
