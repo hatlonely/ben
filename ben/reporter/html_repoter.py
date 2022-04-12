@@ -288,6 +288,10 @@ _unit_group_tpl = """
               },
               tooltip: {
                 trigger: 'axis',
+                show: true,
+                axisPointer: {
+                    type: "cross"
+                }
               },
               toolbox: {
                 feature: {
@@ -298,11 +302,9 @@ _unit_group_tpl = """
               },
               xAxis: {
                 type: "time",
-                boundaryGap: false
               },
               yAxis: {
                 type: "value",
-                boundaryGap: false
               },
               series: [
                 {% for unit in group.units %}
@@ -334,6 +336,10 @@ _unit_group_tpl = """
               },
               tooltip: {
                 trigger: 'axis',
+                show: true,
+                axisPointer: {
+                    type: "cross"
+                }
               },
               toolbox: {
                 feature: {
@@ -385,6 +391,10 @@ _unit_group_tpl = """
               },
               tooltip: {
                 trigger: 'axis',
+                show: true,
+                axisPointer: {
+                    type: "cross"
+                }
               },
               toolbox: {
                 feature: {
