@@ -84,7 +84,7 @@ class CMSMonitor(Monitor):
                     kvs[record.measure_labels[idx]] = record.measure_values[idx]
                 measures.append({
                     "time": datetime.fromtimestamp(record.timestamp / 1000).isoformat(),
-                    metric["Name"]: float(kvs[metric["Statistic"]])
+                    "value": float(kvs[metric["Statistic"]])
                 })
             metrics[metric["Name"]] = measures
         return metrics
