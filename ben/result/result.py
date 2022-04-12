@@ -293,7 +293,10 @@ class UnitResult:
         self.code["OK"] = self.success
 
         self.steps.sort(key=lambda x: x.elapse)
-        self.quantile = dict([(str(k), self.steps[int(len(self.steps) * k // 100)].elapse) for k in self.quantile_keys])
+        if self.steps:
+            self.quantile = dict([(str(k), self.steps[int(len(self.steps) * k // 100)].elapse) for k in self.quantile_keys])
+        else:
+            self.quantile = dict([(str(k), 0) for k in self.quantile_keys])
 
 
 @dataclass
@@ -339,9 +342,9 @@ class UnitGroup:
     def add_unit_result(self, unit):
         self.units.append(unit)
 
-    def add_monitor_stat(self, name, metrics, stat):
+    def add_monitor_stat(self, name, unit, stat):
         self.monitor[name] = {
-            "keys": metrics,
+            "unit": unit,
             "stat": stat,
         }
 

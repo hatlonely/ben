@@ -38,11 +38,24 @@ plan:
         type: psutil
         args:
           interval: 0.3
-          metrics: ["CPU", "Mem", "Disk", "IO", "Network"]
+          metrics: ["CPU", "Mem", "Disk", "IOR", "IOW"]
+      cms:
+        type: cms
+        args:
+          AccessKeyId: ak
+          AccessKeySecret: sk
+          InstanceId: id
+          Endpoint: cms-export.cn-shanghai.aliyuncs.com
+          Metrics:
+            - Name: "cpu_total"
+              Statistic: "Average"
+            - Name: "memory_usedspace"
+              Statistic: "Average"
     group:
-      - times: 20000
+      - times: 2000
         parallel: [5, 5]
       - seconds: 20
+        interval: 1
         parallel: [10, 10]
     unit:
       - name: echohello1

@@ -41,11 +41,11 @@ class CMSMonitor(Monitor):
                 "Unit": "",
             }))
 
-    def keys(self):
-        return list([{"name": i["Name"], "unit": i["Unit"]} for i in self.metrics])
+    def unit(self):
+        return dict([(i["Name"], i["Unit"]) for i in self.metrics])
 
     def stat(self, start: datetime, end: datetime):
-        metrics = []
+        metrics = {}
         for metric in self.metrics:
             req = cms_export_20211101_models.CursorRequest()
             req.namespace = self.namespace
@@ -86,5 +86,5 @@ class CMSMonitor(Monitor):
                     "time": datetime.fromtimestamp(record.timestamp / 1000).isoformat(),
                     metric["Name"]: float(kvs[metric["Statistic"]])
                 })
-            metrics.append(measures)
+            metrics[metric["Name"]] = measures
         return metrics

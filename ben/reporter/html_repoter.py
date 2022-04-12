@@ -377,13 +377,13 @@ _unit_group_tpl = """
     {# Monitor #}
     {% for mname, monitor in group.monitor.items() %}
     <div class="card-header justify-content-between d-flex"><span class="fw-bolder">{{ i18n.title.monitor }}-{{ mname }}</span></div>
-    {% for serial in monitor["keys"] %}
+    {% for metric_name, stat in monitor["stat"].items() %}
     <div class="card-body d-flex justify-content-center">
-        <div class="col-md-12" id="{{ '{}-monitor-{}-{}'.format(name, mname, serial["name"]) }}" style="height: 300px;"></div>
+        <div class="col-md-12" id="{{ '{}-monitor-{}-{}'.format(name, mname, metric_name) }}" style="height: 300px;"></div>
         <script>
-            echarts.init(document.getElementById("{{ '{}-monitor-{}-{}'.format(name, mname, serial["name"]) }}")).setOption({
+            echarts.init(document.getElementById("{{ '{}-monitor-{}-{}'.format(name, mname, metric_name) }}")).setOption({
               title: {
-                text: "{{ serial["name"] }}",
+                text: "{{ metric_name }}",
                 left: "center",
               },
               textStyle: {
@@ -410,17 +410,17 @@ _unit_group_tpl = """
               yAxis: {
                 type: "value",
                 axisLabel: {
-                  formatter: yAxisLabelFormatter["{{ serial["unit"] }}"],
+                  formatter: yAxisLabelFormatter["{{ monitor["unit"][metric_name] }}"],
                 }
               },
               series: [
                 {
-                  name: "{{ serial["name"] }}",
+                  name: "{{ metric_name }}",
                   type: "line",
                   smooth: true,
                   symbol: "none",
                   areaStyle: {},
-                  data: {{ json.dumps(monitor_serial(monitor["stat"], serial["name"])) }}
+                  data: {{ json.dumps(monitor_serial(stat, "value")) }}
                 },
               ]
             });

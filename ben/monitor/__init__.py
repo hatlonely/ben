@@ -8,7 +8,7 @@ from .cms_monitor import CMSMonitor
 
 monitor_map = {
     "psutil": PsUtilMonitor,
-    "ecs": CMSMonitor,
+    "cms": CMSMonitor,
 }
 
 
