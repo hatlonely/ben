@@ -366,7 +366,8 @@ _unit_group_tpl = """
         <script>
             echarts.init(document.getElementById("{{ '{}-monitor-{}-{}'.format(name, mname, serial["name"]) }}")).setOption({
               title: {
-                text: "{{ serial["name"] }}"
+                text: "{{ serial["name"] }}",
+                left: "center",
               },
               tooltip: {
                 trigger: 'axis',
