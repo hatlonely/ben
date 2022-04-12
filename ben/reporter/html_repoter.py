@@ -288,9 +288,6 @@ _unit_group_tpl = """
               },
               tooltip: {
                 trigger: 'axis',
-                position: function (pt) {
-                  return [pt[0], '10%'];
-                }
               },
               toolbox: {
                 feature: {
@@ -305,7 +302,7 @@ _unit_group_tpl = """
               },
               yAxis: {
                 type: "value",
-                boundaryGap: [0, '100%']
+                boundaryGap: false
               },
               series: [
                 {% for unit in group.units %}
@@ -337,9 +334,6 @@ _unit_group_tpl = """
               },
               tooltip: {
                 trigger: 'axis',
-                position: function (pt) {
-                  return [pt[0], '10%'];
-                }
               },
               toolbox: {
                 feature: {
@@ -354,7 +348,6 @@ _unit_group_tpl = """
               },
               yAxis: {
                 type: "value",
-                boundaryGap: [0, '100%'],
                 axisLabel: {
                   formatter: yAxisLabelFormatter["percent"],
                 }
@@ -392,9 +385,6 @@ _unit_group_tpl = """
               },
               tooltip: {
                 trigger: 'axis',
-                position: function (pt) {
-                  return [pt[0], '10%'];
-                }
               },
               toolbox: {
                 feature: {
@@ -409,7 +399,6 @@ _unit_group_tpl = """
               },
               yAxis: {
                 type: "value",
-                boundaryGap: [0, '100%'],
                 axisLabel: {
                   formatter: yAxisLabelFormatter["{{ serial["unit"] }}"],
                 }
