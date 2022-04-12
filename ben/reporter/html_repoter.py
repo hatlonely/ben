@@ -178,7 +178,7 @@ _unit_group_tpl = """
     {% if group.is_err %}<div class="card border-danger">{% else %}<div class="card border-success">{% endif %}
 
     <div class="card-header justify-content-between d-flex">
-        <span class="fw-bolder">{{ i18n.title.summary }}</span>
+        <span class="fw-bolder">{{ i18n.title.summary }} No.{{ group.idx + 1 }}</span>
         <span>
             {% if group.seconds %}
             <span class="badge bg-success rounded-pill">{{ group.seconds }}s</span>
