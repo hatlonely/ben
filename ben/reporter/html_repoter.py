@@ -194,7 +194,6 @@ _unit_group_tpl = """
                 <tr class="text-center">
                     <th>{{ i18n.title.unit }}</th>
                     <th>{{ i18n.title.parallel }}</th>
-                    <th>{{ i18n.title.limit }}</th>
                     <th>{{ i18n.title.total }}</th>
                     <th>{{ i18n.title.rate }}</th>
                     <th>{{ i18n.title.qps }}</th>
@@ -209,7 +208,6 @@ _unit_group_tpl = """
                 <tr class="text-center">
                     <td>{{ unit.name }}</td>
                     <td>{{ unit.parallel }}</td>
-                    <td>{{ unit.limit }}</td>
                     <td>{{ unit.total }}</td>
                     <td>{{ int(unit.rate * 10000) / 100 }}%</td>
                     <td>{{ int(unit.qps) }}</td>
@@ -491,13 +489,15 @@ class HtmlReporter(Reporter):
 
     @staticmethod
     def format_timedelta(t: datetime.timedelta):
+        if t.total_seconds() == 0:
+            return 0
         if t >= datetime.timedelta(seconds=1):
             return "{:.2f}s".format(t.total_seconds())
         if t >= datetime.timedelta(milliseconds=1):
             return "{:.2f}ms".format(t.total_seconds()*1000)
         if t >= datetime.timedelta(microseconds=1):
             return "{:.2f}us".format(t.total_seconds()*1000000)
-        return "{:.3f}ns".format(t.total_seconds()*1000000000)
+        return "{:.2f}ns".format(t.total_seconds()*1000000000)
 
     @staticmethod
     def dict_to_items(d: dict):

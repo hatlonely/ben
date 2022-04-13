@@ -4,3 +4,4 @@
 2. 支持 setup/teardown
 3. 支持 retry/until
 4. 归一化百分数
+5. 支持 qps 限流 ?
