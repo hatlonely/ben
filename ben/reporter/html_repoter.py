@@ -364,7 +364,7 @@ _unit_group_tpl = """
                   smooth: true,
                   symbol: "none",
                   areaStyle: {},
-                  data: {{ json.dumps(unit_stage_serial(unit, "rate")) }}
+                  data: {{ json.dumps(unit_stage_serial(unit, "rate", "percent")) }}
                 },
                 {% endfor %}
               ]
@@ -504,8 +504,8 @@ class HtmlReporter(Reporter):
         return list([({"name": k, "value": v}) for k, v in d.items()])
 
     @staticmethod
-    def unit_stage_serial(unit: UnitResult, serial):
-        if serial in ["rate"]:
+    def unit_stage_serial(unit: UnitResult, serial, measurement_unit=""):
+        if measurement_unit == "percent":
             return list([[stage.time.isoformat(), round(getattr(stage, serial) * 100, 2)] for stage in unit.stages])
         return list([[stage.time.isoformat(), round(getattr(stage, serial), 2)] for stage in unit.stages])
 
