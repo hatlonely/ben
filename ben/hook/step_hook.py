@@ -12,4 +12,4 @@ class StepHook(Hook):
         super().__init__(args, test_id)
 
     def on_step_end(self, res: StepResult):
-        print(json.dumps(res.to_json()))
+        print(json.dumps(res.to_json(), default=lambda x: str(x)))
