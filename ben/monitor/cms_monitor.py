@@ -10,6 +10,7 @@ from .monitor import Monitor
 from ..util import merge, REQUIRED
 
 
+# 支持的指标参考: <https://help.aliyun.com/document_detail/163515.html>
 class CMSMonitor(Monitor):
     def __init__(self, args=None):
         args = merge(args, {
