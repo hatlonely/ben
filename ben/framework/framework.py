@@ -127,10 +127,11 @@ class Framework:
         self.customize = json.loads(json.dumps(cfg["framework"]), object_hook=lambda y: SimpleNamespace(**y))
         self.reporter = self.reporter_map[reporter](cfg["reporter"][reporter])
         self.json_result = json_result
-        self.hooks = [self.hook_map[i](cfg["hook"][i], test_id=self.constant.test_id) for i in hooks]
 
+        test_id = uuid.uuid4().hex
+        self.hooks = [self.hook_map[i](cfg["hook"][i], test_id=test_id) for i in hooks]
         self.constant = RuntimeConstant(
-            test_id=uuid.uuid4().hex,
+            test_id=test_id,
             test_directory=test_directory,
             plan_directory=test_directory if not plan_directory else os.path.join(test_directory, plan_directory.strip().rstrip("/")),
             driver_map=self.driver_map,
@@ -391,7 +392,7 @@ class Framework:
             q.put(result)
 
             for hook in constant.hooks:
-                hook.on_step_end(step_info)
+                hook.on_step_end(result)
 
     @staticmethod
     def run_step(
